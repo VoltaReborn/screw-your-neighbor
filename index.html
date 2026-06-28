@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Screw Your Neighbor</title>
+<meta name="theme-color" content="#0a5a3c" />
+<meta name="description" content="Screw Your Neighbor - a mobile card game PWA." />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Screw Your Neighbor" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<style>
+:root{
+  --felt:#0a5a3c;--felt-deep:#084a33;--custom-card-back:#1e4e8c;--panel:rgba(7,15,18,.78);--panel2:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.16);--text:#f7fbff;--muted:#a9bac4;--gold:#f0ca68;--danger:#ff6464;--blue:#7ee1ff;
+  --card-face-light:#f8f8f3;--card-face-dark:#22282e;--black-suit-light:#151719;--red-suit-light:#c92d2d;--black-suit-dark:#edf3f6;--red-suit-dark:#ff7373;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--boardMax:430px;--side-gap:max(0px,calc((100vw - var(--boardMax))/2));
+  --cardW:48px;--cardH:68px;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.08),transparent 34%),#041612;color:var(--text);touch-action:manipulation}button,input,select{font:inherit}button{cursor:pointer}body.face-light{--face-bg:var(--card-face-light);--black-suit:var(--black-suit-light);--red-suit:var(--red-suit-light);--face-border:rgba(255,255,255,.62)}body.face-dark{--face-bg:var(--card-face-dark);--black-suit:var(--black-suit-dark);--red-suit:var(--red-suit-dark);--face-border:rgba(255,255,255,.18)}
+.app{position:fixed;inset:0;margin:auto;width:min(100vw,var(--boardMax));height:100dvh;overflow:hidden;background:radial-gradient(circle at 50% -10%,rgba(255,255,255,.12),transparent 28%),radial-gradient(circle at 0 100%,rgba(46,255,191,.08),transparent 35%),linear-gradient(145deg,rgba(0,0,0,.3),transparent 45%),var(--felt);transition:background 180ms ease;box-shadow:0 0 0 1px rgba(255,255,255,.05),0 0 42px rgba(0,0,0,.58)}
+.game{position:absolute;inset:0;padding:calc(6px + var(--safe-top)) 6px calc(6px + var(--safe-bottom));display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px}.table{position:relative;min-height:0;border:1px solid var(--line);border-radius:19px;background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.09),transparent 35%),radial-gradient(ellipse at center,rgba(0,0,0,.05),rgba(0,0,0,.35)),rgba(0,0,0,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.28);overflow:hidden}.table::after{content:"";position:absolute;inset:58px 34px 72px;border:1px dashed rgba(255,255,255,.13);border-radius:50%;pointer-events:none}.topHud{position:absolute;z-index:8;left:8px;right:32px;top:8px;display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;pointer-events:none}.infoChip{border-radius:999px;background:rgba(0,0,0,.46);border:1px solid rgba(255,255,255,.16);padding:3px 7px;font-size:.61rem;font-weight:1000;color:#ecf7fb}.infoChip.gold{color:#171100;background:var(--gold);border-color:rgba(255,255,255,.38)}.infoChip.red{color:white;background:rgba(176,24,24,.86);border-color:rgba(255,255,255,.2)}
+.centerDeck{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;pointer-events:none;transition:left 260ms ease,top 260ms ease}.deckStack{position:relative;width:56px;height:78px}.deckStack .backCard{position:absolute;--card-w:56px;--card-h:78px;left:0;top:0;transform:none!important;opacity:1!important}.deckLabel{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);font-size:.58rem;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;color:#fff7d2;text-shadow:0 1px 4px #000;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:3px 7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}.turnPrompt{position:absolute;z-index:20;left:50%;top:auto;bottom:138px;transform:translateX(-50%);width:min(45vw,178px);min-width:154px;min-height:0;display:none;border:1px solid rgba(240,202,104,.35);background:linear-gradient(180deg,rgba(19,31,38,.97),rgba(8,13,17,.97));box-shadow:0 12px 30px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08);border-radius:16px;padding:7px 8px}.turnPrompt.open{display:flex;flex-direction:column;justify-content:center;gap:6px}.promptTitle{font-size:.7rem;font-weight:1000;color:#fff7d2;margin:0;text-align:center;line-height:1.08}.promptActions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.promptActions button{min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.16);font-weight:1000;color:#fff;font-size:.78rem;padding:4px 5px}.keepBtn{background:rgba(255,255,255,.09)}.tradeBtn{background:linear-gradient(180deg,rgba(240,202,104,.98),rgba(217,174,72,.98));color:#171100!important;border-color:rgba(255,255,255,.42)!important}.promptHint{display:none!important}.actionStatus{position:absolute;z-index:12;left:50%;top:calc(50% - 74px);transform:translateX(-50%);min-height:22px;font-size:.7rem;font-weight:900;color:#fff7d2;text-align:center;text-shadow:0 1px 3px #000;pointer-events:none}
+.seat{position:absolute;z-index:6;width:110px;min-height:112px;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:3px;transition:left 220ms ease,top 220ms ease,filter 180ms ease}.seat.human{width:110px}.seat.eliminated{opacity:.42;filter:grayscale(.7)}.seat.current .seatCardWrap{box-shadow:0 0 0 3px rgba(240,202,104,.18),0 0 18px rgba(240,202,104,.22)}.seat.dealer .seatName::after{content:"D";margin-left:4px;display:inline-grid;place-items:center;width:15px;height:15px;border-radius:999px;background:var(--gold);color:#171100;font-size:.54rem;font-weight:1000}.seatTop{max-width:100%;display:flex;align-items:center;justify-content:center;gap:4px}.seatName{min-width:0;max-width:100%;height:18px;display:flex;align-items:center;justify-content:center;gap:2px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:999px;padding:2px 7px;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.15);font-size:.62rem;font-weight:1000;color:#f8fcff;box-shadow:0 2px 6px rgba(0,0,0,.2)}.scorePill{display:inline-flex;align-items:center;justify-content:center;min-width:38px;border-radius:999px;border:1px solid rgba(240,202,104,.24);background:rgba(0,0,0,.42);color:var(--gold);padding:2px 6px;font-size:.56rem;font-weight:1000;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.28);transform-origin:center center;will-change:transform,filter}.scorePill.scorePillHidden{visibility:hidden!important}.scorePillClone{position:fixed!important;z-index:9850!important;pointer-events:none!important;margin:0!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:38px;border-radius:999px;border:1px solid rgba(240,202,104,.78);background:rgba(7,11,22,.94);color:#fff7d2;padding:2px 6px;font-size:.56rem;font-weight:1000;line-height:1;box-shadow:0 0 0 1px rgba(240,202,104,.16),0 14px 32px rgba(0,0,0,.44),0 0 18px rgba(240,202,104,.34);transform-origin:center center!important;will-change:transform,opacity,filter!important;white-space:nowrap}.scorePillClone .scoreNum{display:inline-block;min-width:.72em;text-align:right;overflow:hidden}.scorePillClone .scoreNum.rollOut{animation:scoreNumRollOut 120ms cubic-bezier(.2,.72,.18,1) both}.scorePillClone .scoreNum.rollIn{animation:scoreNumRollIn 150ms cubic-bezier(.2,.72,.18,1) both}.scorePill.bump{animation:scoreBump .86s cubic-bezier(.2,.78,.18,1) both}.seatCardWrap{position:relative;border-radius:10px;transition:box-shadow 180ms ease,transform 180ms ease}.seatCardWrap.ghosting{visibility:hidden}.seatStatus{height:17px;font-size:.55rem;line-height:1;font-weight:900;color:#d5e4ea;text-align:center;text-shadow:0 1px 3px #000}.speech{position:absolute;z-index:18;left:50%;top:-30px;transform:translateX(-50%);min-width:48px;max-width:96px;padding:6px 8px;border-radius:14px;background:linear-gradient(180deg,#fff,#eaf2f5);color:#101820;border:1px solid rgba(255,255,255,.75);box-shadow:0 8px 18px rgba(0,0,0,.34);font-size:.68rem;font-weight:1000;text-align:center;animation:speechIn 180ms cubic-bezier(.2,.78,.18,1) both;pointer-events:none}.speech::after{content:"";position:absolute;left:50%;bottom:-5px;width:11px;height:11px;margin-left:-5px;transform:rotate(45deg);background:#eaf2f5}.speech.gold{background:linear-gradient(180deg,#fff4cf,#f0ca68);color:#171100}.speech.blue{background:linear-gradient(180deg,#e8fbff,#9eeaff);color:#071017}.speech.red{background:linear-gradient(180deg,#fff1f1,#ff7373);color:#2b0000}.seat.human .speech{top:-34px}
+.card,.backCard{width:var(--card-w,var(--cardW));height:var(--card-h,var(--cardH));border-radius:clamp(5px,calc(var(--card-w,48px)*.14),10px);position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.32);user-select:none}.card{border:1px solid var(--face-border);background:var(--face-bg);color:var(--black-suit);display:grid;place-items:center}.card[data-suit="♦"],.card[data-suit="♥"]{color:var(--red-suit)}.card.loser{animation:loserGlow 1.1s ease-in-out infinite;outline:3px solid rgba(255,72,72,.9);outline-offset:-3px}.card.revealedFlash{animation:flipIn .42s cubic-bezier(.2,.78,.18,1) both}.cardCenter{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);font-size:calc(var(--card-w,48px)*.56);font-weight:1000;letter-spacing:-.075em;line-height:1;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.22)}.card[data-rank="10"] .cardCenter{font-size:calc(var(--card-w,48px)*.5)}.suitLine{position:absolute;left:50%;top:calc(50% + var(--card-h,68px)*.18);transform:translateX(-50%);font-size:calc(var(--card-w,48px)*.31);font-weight:1000;line-height:1}.cornerIndex{position:absolute;top:3px;left:4px;display:flex;flex-direction:column;line-height:.86}.cornerRank{font-size:calc(var(--card-w,48px)*.22);font-weight:1000;letter-spacing:-.06em}.cornerSuit{font-size:calc(var(--card-w,48px)*.18);font-weight:1000}body.hide-suits .suitLine,body.hide-suits .cornerSuit{display:none}.backCard{border:1px solid rgba(255,255,255,.22);background-color:#1b3d83;background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.22) 0 2px,transparent 3px),linear-gradient(135deg,rgba(255,255,255,.22) 25%,transparent 25% 50%,rgba(255,255,255,.22) 50% 75%,transparent 75%);background-size:12px 12px,14px 14px}.seat .card,.seat .backCard{--card-w:58px;--card-h:82px}.seat.human .card,.seat.human .backCard{--card-w:58px;--card-h:82px}.deckStack.ghosting .backCard:nth-child(2){visibility:hidden}.flightCard{position:fixed;z-index:9990;left:0;top:0;margin:0;pointer-events:none;transition:transform 780ms cubic-bezier(.2,.78,.18,1),opacity 780ms ease;will-change:transform,opacity}.flightCard .card,.flightCard .backCard{margin:0;--card-w:inherit;--card-h:inherit}.flightCard.deckFlight .backCard{--card-w:56px;--card-h:78px}.flightCard.flipOnly{transition:none}.flightCard.flipOnly .card.flipFaceDown{animation:flipFaceDown .18s ease-in forwards}.flightCard.flipOnly .backCard.flipBackIn{animation:flipBackIn .18s ease-out both}.modalOverlay .card,.modalOverlay .backCard{--card-w:50px;--card-h:70px}
+body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .cardBackThumb[data-style="solid-blue"]{background:linear-gradient(180deg,#1e4e8c,#153a68);border-color:#0e3a74}body[data-cardback="blueflame"] .backCard,.cardBackThumb[data-style="blueflame"]{background:radial-gradient(120px 90px at 50% 110%,rgba(255,255,255,.15),transparent 60%),radial-gradient(80px 60px at 50% -10%,rgba(255,255,255,.08),transparent 60%),conic-gradient(from 200deg at 60% 40%,#2b6cb0,#1d4f91,#133a73,#1d4f91,#2b6cb0);border-color:#0e3a74}body[data-cardback="wave"] .backCard,.cardBackThumb[data-style="wave"]{background:linear-gradient(135deg,#1f6db1 0%,#165792 50%,#124b80 100%),repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.12) 0 2px,transparent 3px 6px);border-color:#0e3a74}body[data-cardback="solid-blue"] .backCard{background:linear-gradient(180deg,#1e4e8c,#153a68);border-color:#0e3a74}body[data-cardback="solid-red"] .backCard,.cardBackThumb[data-style="solid-red"]{background:linear-gradient(180deg,#b11f1f,#7e1515);border-color:#6e0f0f}body[data-cardback="solid-black"] .backCard,.cardBackThumb[data-style="solid-black"]{background:linear-gradient(180deg,#222,#111);border-color:#000}body[data-cardback="solid-green"] .backCard,.cardBackThumb[data-style="solid-green"]{background:linear-gradient(180deg,#156f4a,#0f5437);border-color:#0a3b28}body[data-cardback="mix-red-blue"] .backCard,.cardBackThumb[data-style="mix-red-blue"]{background:conic-gradient(from 0deg at 50% 50%,#b11f1f,#1e4e8c,#b11f1f)}body[data-cardback="mix-blue-black"] .backCard,.cardBackThumb[data-style="mix-blue-black"]{background:conic-gradient(from 0deg at 50% 50%,#1e4e8c,#111,#1e4e8c)}body[data-cardback="mix-red-black"] .backCard,.cardBackThumb[data-style="mix-red-black"]{background:conic-gradient(from 0deg at 50% 50%,#b11f1f,#111,#b11f1f)}body[data-cardback="mix-red-green"] .backCard,.cardBackThumb[data-style="mix-red-green"]{background:conic-gradient(from 0deg at 50% 50%,#b11f1f,#156f4a,#b11f1f)}body[data-cardback="mix-green-black"] .backCard,.cardBackThumb[data-style="mix-green-black"]{background:conic-gradient(from 0deg at 50% 50%,#156f4a,#111,#156f4a)}body[data-cardback="mix-green-blue"] .backCard,.cardBackThumb[data-style="mix-green-blue"]{background:conic-gradient(from 0deg at 50% 50%,#156f4a,#1e4e8c,#156f4a)}body[data-cardback="custom-solid"] .backCard,.cardBackThumb[data-style="custom-solid"]{background:linear-gradient(180deg,var(--custom-card-back),color-mix(in srgb,var(--custom-card-back) 62%,black));border-color:color-mix(in srgb,var(--custom-card-back) 62%,black)}
+.drawer{position:fixed;z-index:8000;top:0;right:var(--side-gap);height:100dvh;width:min(88vw,390px);padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);transform:translateX(100%);transition:transform 180ms ease;pointer-events:none}.drawer.open{transform:translateX(0);pointer-events:auto}.drawer.dragging{transition:none!important}.drawerTab{position:absolute;left:-21px;top:calc(61.5dvh - 31px);width:21px;height:62px;border:1px solid rgba(255,255,255,.22);border-right:0;border-radius:12px 0 0 12px;background:rgba(7,14,18,.92);color:var(--gold);display:grid;place-items:center;font-size:1rem;font-weight:1000;box-shadow:-3px 4px 14px rgba(0,0,0,.35);pointer-events:auto}.drawer.open .drawerTab span{transform:rotate(180deg)}body.splashing:not(.splash-rules-open) .drawerTab{display:none}.drawerBody{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);border-left:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,rgba(20,31,39,.98),rgba(6,10,13,.98));box-shadow:-12px 0 28px rgba(0,0,0,.46)}.drawerHead{padding:10px 11px 7px;border-bottom:1px solid rgba(255,255,255,.13);display:flex;justify-content:space-between;align-items:center;gap:8px}.drawerTitle{font-weight:1000;font-size:1rem}.drawerContent{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:9px 10px 14px}.closeDrawer,.backBtn,.drawerMenuBtn,.miniBtn,.segBtn,.primaryBtn,.ghostBtn{border:1px solid rgba(255,255,255,.16);color:#fff;background:rgba(255,255,255,.08);border-radius:10px;font-weight:900}.closeDrawer{width:34px;height:30px;display:grid;place-items:center;font-size:1.08rem}.drawerMenuBtn{width:100%;min-height:48px;text-align:left;padding:10px 11px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.055));display:flex;justify-content:space-between;align-items:center;font-size:.95rem;margin-bottom:7px}.drawerMenuBtn small{color:var(--muted);font-size:.72rem}.drawerHome{min-height:100%;display:flex;flex-direction:column}.drawerHome nav{flex:0 0 auto}.drawerVersionBadge{margin-top:auto!important;padding:8px 2px 0!important;border:0!important;background:transparent!important;box-shadow:none!important;display:flex!important;justify-content:center!important;align-items:center!important}.drawerVersionBadge .versionSeal,.drawerVersionBadge span{display:none!important}.drawerVersionBadge strong{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:54px!important;padding:4px 10px!important;border-radius:999px!important;background:rgba(0,0,0,.34)!important;border:1px solid rgba(240,202,104,.28)!important;color:var(--gold)!important;font-size:.68rem!important;font-weight:1000!important;letter-spacing:.08em!important;line-height:1!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 12px rgba(0,0,0,.18)!important}.drawerHome.hidden,.subpage{display:none}.subpage.active{display:block}.subTop{display:flex;align-items:center;gap:8px;margin-bottom:8px;position:sticky;top:-1px;z-index:4;padding:0 0 7px;background:linear-gradient(180deg,rgba(20,31,39,.99),rgba(20,31,39,.92))}.backBtn{width:34px;height:30px;color:var(--gold)}.subTitle{font-weight:1000}.sectionBox{border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:9px;background:rgba(255,255,255,.055);margin-bottom:9px}.sectionBox h3{margin:0 0 7px;font-size:.8rem;color:var(--gold);text-transform:uppercase;letter-spacing:.07em}.sectionBox p,.sectionBox li{color:#d9e5ea;font-size:.78rem;line-height:1.28}.sectionBox ul,.sectionBox ol{margin:.4rem 0 .3rem 1.1rem;padding:0}.controlRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}.controlRow:first-of-type{border-top:0}.controlRow label,.controlLabel{font-size:.78rem;font-weight:900}.controlRow select,.controlRow input{max-width:54%;min-height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:#111a20;color:#fff;padding:3px 7px;font-weight:800}.toggle{width:46px;height:26px;border-radius:999px;border:1px solid rgba(255,255,255,.17);background:rgba(255,255,255,.1);position:relative;flex:0 0 auto}.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:999px;background:#d7e2e8;transition:transform 120ms ease,background 120ms ease}.toggle.on{background:rgba(240,202,104,.28);border-color:rgba(240,202,104,.7)}.toggle.on::after{transform:translateX(20px);background:var(--gold)}.segmented{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.segBtn{min-height:28px;padding:4px 8px;font-size:.74rem;background:rgba(255,255,255,.07)}.segBtn.active{background:rgba(240,202,104,.25);border-color:rgba(240,202,104,.65)}.settingsTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:9px}.settingsTabBtn{min-height:34px;border:1px solid rgba(255,255,255,.15);border-radius:11px;background:rgba(255,255,255,.065);color:#e9f4f8;font-size:.78rem;font-weight:1000}.settingsTabBtn.active{color:#171100;background:linear-gradient(180deg,rgba(240,202,104,.98),rgba(240,202,104,.78));border-color:rgba(255,255,255,.36);box-shadow:0 2px 10px rgba(0,0,0,.28),0 0 0 2px rgba(240,202,104,.12)}.settingsTabPanel{display:none}.settingsTabPanel.active{display:block}.sectionHeader{width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:0;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.035));color:#fff;font-weight:1000}.sectionHeader small{color:var(--muted);font-size:.68rem}.sectionContent{padding:8px 9px}.sectionContent.collapsed{display:none}.nestedSettingsBlock{border:1px solid rgba(255,255,255,.1);border-radius:12px;margin:8px 0;background:rgba(0,0,0,.11);overflow:hidden}.cardBackGallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:3px 0 8px}.cardBackOption{min-height:76px;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:rgba(255,255,255,.055);display:grid;place-items:center;gap:4px;padding:5px}.cardBackOption.active{border-color:rgba(240,202,104,.72);box-shadow:0 0 0 2px rgba(240,202,104,.13);background:rgba(240,202,104,.08)}.cardBackThumb{width:34px;height:48px;border-radius:7px;border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 0 0 2px rgba(255,255,255,.1),0 2px 6px rgba(0,0,0,.34)}.cardBackOption span{font-size:.56rem;line-height:1;color:rgba(255,255,255,.88);font-weight:900;text-align:center}.feltPresetGrid{display:grid;grid-template-columns:repeat(6,30px);gap:6px;justify-content:end}.feltChip{width:30px;height:30px;border-radius:999px;border:2px solid rgba(255,255,255,.24);box-shadow:0 2px 6px rgba(0,0,0,.34)}.feltChip.active{outline:2px solid var(--gold);outline-offset:2px}.smallHelp{font-size:.72rem!important;color:var(--muted)!important;line-height:1.24!important;margin:4px 0 0!important}.logEntry,.rankRow{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px;margin-bottom:8px;background:rgba(255,255,255,.045)}.logEntry strong{display:block;color:#fff7d2;font-size:.78rem}.logEntry p{margin:3px 0 0}.rankRow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}.rankNum{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:rgba(240,202,104,.18);color:var(--gold);font-weight:1000}.rankName{font-weight:1000}.rankPts{font-weight:1000;color:var(--gold)}
+.splash{position:fixed;z-index:9000;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 5%,rgba(255,255,255,.12),transparent 36%),linear-gradient(145deg,var(--felt),#041612 78%);padding:calc(20px + var(--safe-top)) 18px calc(20px + var(--safe-bottom));overflow:hidden;transform-origin:50% 50%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform;transform:perspective(980px) rotateY(0deg) translate3d(0,0,0)}.splash.exit{pointer-events:none;animation:splashTurn .36s cubic-bezier(.20,.76,.12,1) forwards}.splashCard{width:min(92vw,380px);border:1px solid rgba(255,255,255,.18);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(0,0,0,.16)),rgba(7,14,18,.74);box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.11);padding:22px 18px}.logo{display:grid;place-items:center;margin-bottom:14px}.logoMark{width:102px;height:132px;border-radius:17px;background:var(--face-bg);border:1px solid var(--face-border);color:var(--black-suit);box-shadow:0 12px 30px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.5);display:grid;place-items:center;transform:rotate(-4deg);position:relative}.logoMark::before{content:"SYN";font-size:1.45rem;font-weight:1000;letter-spacing:-.08em}.logoMark::after{content:"A 2 Q K";position:absolute;bottom:18px;font-size:.82rem;font-weight:1000;color:var(--red-suit)}.title{font-size:2.0rem;font-weight:1000;letter-spacing:-.08em;text-align:center;margin:0}.tagline{text-align:center;color:#dce9ee;font-weight:850;margin:4px 0 17px;font-size:.85rem}.splashActions{display:grid;gap:8px}.primaryBtn,.ghostBtn{min-height:44px;padding:10px 12px}.primaryBtn{background:linear-gradient(180deg,rgba(240,202,104,1),rgba(217,174,72,1));color:#171100;border-color:rgba(255,255,255,.4);box-shadow:0 6px 16px rgba(0,0,0,.28)}.ghostBtn{background:rgba(255,255,255,.08);color:#fff}.primaryBtn:disabled,.ghostBtn:disabled{opacity:.45}.modalOverlay{position:fixed;inset:0;z-index:9500;display:none;background:rgba(0,0,0,.62);padding:calc(16px + var(--safe-top)) 12px calc(16px + var(--safe-bottom));place-items:center}.modalOverlay.open{display:grid}.modalCard{width:min(94vw,390px);max-height:88dvh;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto;border-radius:17px;border:1px solid rgba(255,255,255,.18);background:#101820;box-shadow:0 16px 50px rgba(0,0,0,.55)}.modalHead{display:flex;justify-content:space-between;align-items:center;padding:11px;border-bottom:1px solid rgba(255,255,255,.11)}.modalHead strong{color:var(--gold)}.modalBody{min-height:0;overflow-y:auto;padding:10px}.modalBody p,.modalBody li{color:#d9e5ea;font-size:.82rem;line-height:1.28}.modalFoot{padding:10px;border-top:1px solid rgba(255,255,255,.11);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.modalFoot .primaryBtn,.modalFoot .ghostBtn{min-height:38px}.setupGrid{display:grid;gap:9px}.setupRow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:9px;background:rgba(255,255,255,.045)}.setupRow label{font-weight:1000;font-size:.82rem}.setupRow select{min-height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#111a20;color:#fff;padding:4px 8px;font-weight:900}.toast{position:fixed;z-index:9700;left:50%;bottom:calc(16px + var(--safe-bottom));transform:translateX(-50%) translateY(24px);max-width:min(92vw,390px);padding:9px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(7,12,16,.95);color:#fff7d2;font-size:.78rem;font-weight:900;box-shadow:0 10px 26px rgba(0,0,0,.42);opacity:0;pointer-events:none}.toast.show{animation:toastIn .28s cubic-bezier(.16,.78,.18,1) forwards}.hidden{display:none!important}
+@keyframes splashTurn{0%{transform:perspective(980px) rotateY(0deg) translate3d(0,0,0)}100%{transform:perspective(980px) rotateY(89.8deg) translate3d(0,0,0)}}@keyframes speechIn{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.92)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}@keyframes flipIn{0%{transform:perspective(500px) rotateY(90deg);filter:brightness(1.25)}100%{transform:perspective(500px) rotateY(0)}}@keyframes flipFaceDown{0%{transform:perspective(500px) rotateY(0)}100%{transform:perspective(500px) rotateY(90deg)}}@keyframes flipBackIn{0%{transform:perspective(500px) rotateY(-90deg)}100%{transform:perspective(500px) rotateY(0)}}@keyframes loserGlow{0%,100%{box-shadow:0 0 0 1px rgba(255,40,40,.5),0 0 10px rgba(255,40,40,.3),0 2px 6px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 3px rgba(255,40,40,.72),0 0 24px rgba(255,40,40,.72),0 2px 6px rgba(0,0,0,.35)}}@keyframes scoreBump{0%{transform:scale(1);filter:brightness(1)}34%{transform:scale(1.46);filter:brightness(1.2)}64%{transform:scale(1.46);filter:brightness(1.2)}100%{transform:scale(1);filter:brightness(1)}}@keyframes scoreNumRollOut{from{transform:translateY(0);opacity:1}to{transform:translateY(-75%);opacity:0}}@keyframes scoreNumRollIn{from{transform:translateY(75%);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(24px) scale(.96)}70%{opacity:1;transform:translateX(-50%) translateY(-3px) scale(1.02)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@media(max-width:380px){:root{--cardW:54px;--cardH:76px}.seat{width:100px}.seat.human{width:100px}.seat .card,.seat .backCard{--card-w:54px;--card-h:76px}.seat.human .card,.seat.human .backCard{--card-w:54px;--card-h:76px}.cardBackGallery{grid-template-columns:repeat(3,minmax(0,1fr))}.feltPresetGrid{grid-template-columns:repeat(3,30px)}}
+</style>
+</head>
+<body class="face-light splashing" data-cardback="classic">
+<div class="app" id="app">
+  <main class="game" id="game" aria-label="Screw Your Neighbor game board">
+    <section class="table" id="table">
+      <div class="topHud">
+        <div class="infoChip gold" id="roundChip">Round 1</div>
+        <div class="infoChip" id="dealerChip">Dealer: —</div>
+        <div class="infoChip" id="activeChip">Players: —</div>
+      </div>
+      <div class="centerDeck" id="centerDeck">
+        <div class="deckStack" id="deckCard" data-card-holder="deck"><div class="backCard"><div class="deckLabel" id="deckLabel">Deck</div></div></div>
+      </div>
+      <div id="seatLayer"></div>
+      <div class="actionStatus" id="actionStatus"></div>
+      <div class="turnPrompt" id="turnPrompt">
+        <div class="promptTitle" id="promptTitle">Your turn</div>
+        <div class="promptActions">
+          <button class="keepBtn" id="keepBtn" type="button">Stay</button>
+          <button class="tradeBtn" id="tradeBtn" type="button">Trade</button>
+        </div>
+        <div class="promptHint" id="promptHint">Avoid being the lowest card. Aces are low.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Game menu">
+  <button class="drawerTab" id="drawerTab" type="button" aria-label="Open menu"><span>‹</span></button>
+  <div class="drawerBody">
+    <header class="drawerHead">
+      <div><div class="drawerTitle">Screw Your Neighbor</div><small style="color:var(--muted);font-weight:800;" id="drawerSub">Game menu</small></div>
+      <button class="closeDrawer" id="closeDrawer" aria-label="Close drawer">×</button>
+    </header>
+    <div class="drawerContent">
+      <div class="drawerHome" id="drawerHome">
+        <nav class="drawerMenu" aria-label="Top-level drawer items">
+          <button class="drawerMenuBtn" data-page="scoresPage" type="button">Scores <small>points + standings</small></button>
+          <button class="drawerMenuBtn" data-page="logPage" type="button">Log <small>round history</small></button>
+          <button class="drawerMenuBtn" data-page="settingsPage" type="button">Settings <small>appearance + gameplay</small></button>
+          <button class="drawerMenuBtn" id="newGameMenuBtn" type="button">Start New Game <small>fresh table</small></button>
+          <button class="drawerMenuBtn" data-page="rulesPage" type="button">Rules <small>how to play</small></button>
+        </nav>
+        <div class="drawerVersionBadge" id="drawerVersionBadge" aria-label="App version"><strong id="versionLabel">—</strong></div>
+      </div>
+      <section class="subpage" id="scoresPage"><div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Scores</div></div><div class="sectionBox"><div id="scoreList"></div></div></section>
+      <section class="subpage" id="logPage"><div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Game Log</div></div><div class="sectionBox"><div id="logEntries"><div class="logEntry"><strong>No log yet</strong><p>Trades, blocks, reveals, and scoring will appear here.</p></div></div></div></section>
+      <section class="subpage" id="settingsPage">
+        <div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Settings</div></div>
+        <div class="settingsTabs" role="tablist" aria-label="Settings sections"><button class="settingsTabBtn active" type="button" data-settings-tab="appearance">Theme / Appearance</button><button class="settingsTabBtn" type="button" data-settings-tab="gameplay">Gameplay</button></div>
+        <div class="settingsTabPanel active" data-settings-panel="appearance">
+          <div class="sectionBox"><button class="sectionHeader" type="button" data-collapse-target="appearanceSettingsContent"><span>Theme / Appearance</span><span>⌄</span></button><div class="sectionContent" id="appearanceSettingsContent">
+            <div class="controlRow"><span class="controlLabel">Card faces</span><div class="segmented"><button class="segBtn active" data-face="light">Light</button><button class="segBtn" data-face="dark">Dark</button></div></div>
+            <p class="smallHelp">Choose the card face, card back, and table felt. These settings are saved.</p>
+            <div class="nestedSettingsBlock"><button class="sectionHeader" type="button" data-collapse-target="cardBackSettingsContent"><span>Card backs</span><small id="cardBackSummary">Classic</small><span>⌄</span></button><div class="sectionContent" id="cardBackSettingsContent">
+              <div class="cardBackGallery" id="cardBackGallery">
+                <button class="cardBackOption active" type="button" data-backstyle="classic"><div class="cardBackThumb" data-style="classic"></div><span>Classic</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="blueflame"><div class="cardBackThumb" data-style="blueflame"></div><span>Blue Flame</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="wave"><div class="cardBackThumb" data-style="wave"></div><span>Wave</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="solid-blue"><div class="cardBackThumb" data-style="solid-blue"></div><span>Blue</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="solid-red"><div class="cardBackThumb" data-style="solid-red"></div><span>Red</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="solid-black"><div class="cardBackThumb" data-style="solid-black"></div><span>Black</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="solid-green"><div class="cardBackThumb" data-style="solid-green"></div><span>Green</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-red-blue"><div class="cardBackThumb" data-style="mix-red-blue"></div><span>Red/Blue</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-blue-black"><div class="cardBackThumb" data-style="mix-blue-black"></div><span>Blue/Black</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-red-black"><div class="cardBackThumb" data-style="mix-red-black"></div><span>Red/Black</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-red-green"><div class="cardBackThumb" data-style="mix-red-green"></div><span>Red/Green</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-green-black"><div class="cardBackThumb" data-style="mix-green-black"></div><span>Green/Black</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="mix-green-blue"><div class="cardBackThumb" data-style="mix-green-blue"></div><span>Green/Blue</span></button>
+                <button class="cardBackOption" type="button" data-backstyle="custom-solid"><div class="cardBackThumb" data-style="custom-solid"></div><span>Custom</span></button>
+              </div><div class="controlRow"><label for="customCardBack">Custom back color</label><input type="color" id="customCardBack" value="#1e4e8c" /></div>
+            </div></div>
+            <div class="controlRow" style="align-items:flex-start"><span class="controlLabel">Table felt</span><div class="feltPresetGrid">
+              <button class="feltChip active" type="button" data-felt="#0a5a3c" data-felt-deep="#084a33" aria-label="Classic green felt" style="background:#0a5a3c"></button>
+              <button class="feltChip" type="button" data-felt="#124a3b" data-felt-deep="#071f1a" aria-label="Deep green felt" style="background:#124a3b"></button>
+              <button class="feltChip" type="button" data-felt="#173f72" data-felt-deep="#07182d" aria-label="Blue felt" style="background:#173f72"></button>
+              <button class="feltChip" type="button" data-felt="#3a265f" data-felt-deep="#171020" aria-label="Purple felt" style="background:#3a265f"></button>
+              <button class="feltChip" type="button" data-felt="#1b2226" data-felt-deep="#050709" aria-label="Black felt" style="background:#1b2226"></button>
+              <button class="feltChip" type="button" data-felt="#7c231f" data-felt-deep="#210706" aria-label="Red felt" style="background:#7c231f"></button>
+            </div></div><div class="controlRow"><label for="customFelt">Custom felt color</label><input type="color" id="customFelt" value="#0a5a3c" /></div>
+          </div></div>
+        </div>
+        <div class="settingsTabPanel" data-settings-panel="gameplay"><div class="sectionBox"><button class="sectionHeader" type="button" data-collapse-target="gameplaySettingsContent"><span>Gameplay</span><span>⌄</span></button><div class="sectionContent" id="gameplaySettingsContent">
+          <div class="controlRow"><div><div class="controlLabel">Animations</div><p class="smallHelp">Card swaps, flips, speech bubbles, and point bumps.</p></div><button class="toggle on" data-toggle="animations" aria-label="Toggle animations"></button></div>
+          <div class="controlRow"><span class="controlLabel">Show suits</span><button class="toggle on" data-toggle="showSuits" aria-label="Toggle show suits"></button></div>
+          <div class="controlRow"><label for="aiPace">AI pace</label><select id="aiPace"><option value="fast">Fast</option><option value="normal" selected>Normal</option><option value="slow">Slow</option></select></div>
+        </div></div></div>
+      </section>
+      <section class="subpage" id="rulesPage"><div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Rules</div></div><div class="sectionBox"><h3>Screw Your Neighbor</h3><p>Each active player is dealt one card. Aces are low and Kings are high. Try not to have the lowest card at the reveal.</p><ol><li>Play starts left of the dealer and moves toward the dealer.</li><li>On your turn, choose <b>Stay</b> or <b>Trade</b> with the next player.</li><li>If you try to trade with a King, that King flips up and blocks the trade.</li><li>If you try to trade with a Queen, that Queen flips up and forces you to trade with the previous player instead.</li><li>If that forced backward trade hits another King or Queen, that card flips up, the original card returns home, and no back-and-forth loop happens.</li><li>The dealer acts last and may trade with the deck. Deck trades are never blocked by Kings or Queens.</li><li>Everyone reveals. The lowest card gets 1 point. Ties for lowest all get a point.</li><li>At 3 points, a player is eliminated. If everyone left would be eliminated together, the round is replayed with the same players.</li><li>Last player standing wins.</li></ol></div></section>
+    </div>
+  </div>
+</aside>
+
+<section class="splash" id="splash">
+  <div class="splashCard"><div class="logo"><div class="logoMark"></div></div><h1 class="title">Screw Your Neighbor</h1><div class="tagline">Stay sharp. Trade carefully. Don’t be lowest.</div><div class="splashActions"><button class="primaryBtn" id="startBtn" type="button">Start New Game</button><button class="ghostBtn hidden" id="continueBtn" type="button">Continue Game</button><button class="ghostBtn" id="splashRulesBtn" type="button">Rules</button></div></div>
+</section>
+
+<div class="modalOverlay" id="setupModal"><div class="modalCard"><div class="modalHead"><strong>New Game</strong><button class="closeDrawer" data-close-modal="setupModal">×</button></div><div class="modalBody"><div class="setupGrid"><div class="setupRow"><label for="setupAiCount">AI players</label><select id="setupAiCount"><option value="3">3 AI</option><option value="4" selected>4 AI</option><option value="5">5 AI</option><option value="6">6 AI</option><option value="7">7 AI</option><option value="8">8 AI</option><option value="9">9 AI</option><option value="10">10 AI</option></select></div><p class="smallHelp">Total players will be you plus the selected AI players. Dealer rotates each round and acts last.</p></div></div><div class="modalFoot"><button class="ghostBtn" data-close-modal="setupModal" type="button">Cancel</button><button class="primaryBtn" id="confirmNewGame" type="button">Deal Cards</button></div></div></div>
+<div class="modalOverlay" id="roundModal"><div class="modalCard"><div class="modalHead"><strong id="roundModalTitle">Round Complete</strong></div><div class="modalBody" id="roundModalBody"></div><div class="modalFoot" id="roundModalFoot"><button class="primaryBtn" id="nextRoundBtn" type="button">Next Round</button></div></div></div>
+<div class="modalOverlay" id="watchModal"><div class="modalCard"><div class="modalHead"><strong>You’re Out</strong></div><div class="modalBody"><p>You hit 3 points and have been eliminated. You can watch the AI players finish the game, or end this game and return to the splash page.</p></div><div class="modalFoot"><button class="ghostBtn" id="exitAfterElimBtn" type="button">Exit to Splash</button><button class="primaryBtn" id="watchAfterElimBtn" type="button">Watch the Computers</button></div></div></div>
+<div class="modalOverlay" id="gameOverModal"><div class="modalCard"><div class="modalHead"><strong>Game Over</strong></div><div class="modalBody" id="gameOverBody"></div><div class="modalFoot"><button class="primaryBtn" id="gameOverSplashBtn" type="button">Back to Splash</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+  const APP_VERSION = 'v14';
+  const SAVE_KEY = 'synSave.v1';
+  const SETTINGS_KEY = 'synSettings.v1';
+  const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const SUITS = ['♠','♥','♦','♣'];
+  const AI_NAMES = ['Mabel','Otis','Nora','Felix','June','Hank','Ruby','Theo','Ivy','Gus','Pearl','Lena','Milo','Vera','Archie','Cleo'];
+  const BACK_LABELS = {'classic':'Classic','blueflame':'Blue Flame','wave':'Wave','solid-blue':'Blue','solid-red':'Red','solid-black':'Black','solid-green':'Green','mix-red-blue':'Red/Blue','mix-blue-black':'Blue/Black','mix-red-black':'Red/Black','mix-red-green':'Red/Green','mix-green-black':'Green/Black','mix-green-blue':'Green/Blue','custom-solid':'Custom'};
+  const els = {};
+  let state = null;
+  let transient = {speech:null, action:'', losers:[], scoreBumps:[], justRevealed:[], flipUpIds:[], ghostHolders:[]};
+  let pendingTimer = null;
+
+  const defaultSettings = () => ({face:'light',cardBack:'classic',customCardBack:'#1e4e8c',felt:'#0a5a3c',feltDeep:'#084a33',animations:true,showSuits:true,aiPace:'normal'});
+  let settings = defaultSettings();
+
+  function $(id){ return document.getElementById(id); }
+  function delay(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+  function frame(){ return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); }
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function cardValue(card){ return card ? RANKS.indexOf(card.rank) + 1 : 0; }
+  function cardName(card){ return card ? `${card.rank}${card.suit}` : '—'; }
+  function isSpecial(card){ return card && (card.rank === 'K' || card.rank === 'Q'); }
+  function isRedSuit(suit){ return suit === '♥' || suit === '♦'; }
+  function activePlayers(){ return state.players.filter(p => !p.eliminated); }
+  function activeIds(){ return activePlayers().map(p => p.id); }
+  function playerById(id){ return state.players.find(p => p.id === id); }
+  function nameOf(p){ return p?.human ? 'You' : (p?.name || '—'); }
+  function objectName(p){ return p?.human ? 'you' : (p?.name || 'that player'); }
+  function possessiveName(p){ return p?.human ? 'Your' : `${p?.name || 'That player'}'s`; }
+  function staySentence(p){ return p?.human ? 'You stay.' : `${p.name} stays.`; }
+  function decidingSentence(p){ return p?.human ? 'Your turn.' : `${p.name} is deciding…`; }
+  function lowestSentence(p){ return p?.human ? 'You have the lowest card.' : `${p.name} has the lowest card.`; }
+  function currentPlayerId(){ return state.turnOrder[state.turnIndex] ?? null; }
+  function isDealer(id){ return id === state.dealerId; }
+  function isHumanTurn(){ return currentPlayerId() === 0 && !state.humanWatching && !playerById(0)?.eliminated; }
+  function aiDelay(){ return settings.aiPace === 'fast' ? 360 : settings.aiPace === 'slow' ? 980 : 650; }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  function init(){
+    ['app','game','table','seatLayer','roundChip','dealerChip','activeChip','centerDeck','deckCard','deckLabel','turnPrompt','promptTitle','promptHint','keepBtn','tradeBtn','actionStatus','drawer','drawerTab','drawerHome','drawerSub','closeDrawer','versionLabel','scoreList','logEntries','splash','startBtn','continueBtn','splashRulesBtn','setupModal','setupAiCount','confirmNewGame','roundModal','roundModalTitle','roundModalBody','roundModalFoot','nextRoundBtn','watchModal','exitAfterElimBtn','watchAfterElimBtn','gameOverModal','gameOverBody','gameOverSplashBtn','toast','newGameMenuBtn','customCardBack','customFelt','cardBackSummary','aiPace'].forEach(id => els[id] = $(id));
+    els.versionLabel.textContent = APP_VERSION;
+    loadSettings();
+    applySettings();
+    bindUI();
+    installManifest();
+    registerServiceWorker();
+    updateContinueVisibility();
+    renderEmptyBoard();
+  }
+
+  function bindUI(){
+    els.startBtn.addEventListener('click', () => openModal('setupModal'));
+    els.continueBtn.addEventListener('click', continueGame);
+    els.splashRulesBtn.addEventListener('click', () => { openDrawer('rulesPage'); document.body.classList.add('splash-rules-open'); });
+    els.confirmNewGame.addEventListener('click', () => startNewGame(Number(els.setupAiCount.value)));
+    els.newGameMenuBtn?.addEventListener('click', () => openModal('setupModal'));
+    els.keepBtn.addEventListener('click', () => humanChoose('keep'));
+    els.tradeBtn.addEventListener('click', () => humanChoose('trade'));
+    els.nextRoundBtn.addEventListener('click', () => { closeModal('roundModal'); beginRound(); });
+    els.watchAfterElimBtn.addEventListener('click', () => { state.humanWatching = true; closeModal('watchModal'); saveGame(); beginRound(); });
+    els.exitAfterElimBtn.addEventListener('click', () => { closeModal('watchModal'); exitToSplash(true); });
+    els.gameOverSplashBtn.addEventListener('click', () => { closeModal('gameOverModal'); exitToSplash(true); });
+    document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
+    els.drawerTab.addEventListener('click', () => toggleDrawer());
+    els.closeDrawer.addEventListener('click', closeDrawer);
+    document.querySelectorAll('.drawerMenuBtn[data-page]').forEach(btn => btn.addEventListener('click', () => showDrawerPage(btn.dataset.page)));
+    document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', showDrawerHome));
+    document.querySelectorAll('[data-settings-tab]').forEach(btn => btn.addEventListener('click', () => setSettingsTab(btn.dataset.settingsTab)));
+    document.querySelectorAll('[data-collapse-target]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.collapseTarget)?.classList.toggle('collapsed')));
+    document.querySelectorAll('[data-face]').forEach(btn => btn.addEventListener('click', () => { settings.face = btn.dataset.face; applySettings(); saveSettings(); render(); }));
+    document.querySelectorAll('[data-backstyle]').forEach(btn => btn.addEventListener('click', () => { settings.cardBack = btn.dataset.backstyle; applySettings(); saveSettings(); }));
+    document.querySelectorAll('.feltChip').forEach(btn => btn.addEventListener('click', () => { settings.felt = btn.dataset.felt; settings.feltDeep = btn.dataset.feltDeep; els.customFelt.value = settings.felt; applySettings(); saveSettings(); }));
+    document.querySelectorAll('[data-toggle]').forEach(btn => btn.addEventListener('click', () => { const key = btn.dataset.toggle; settings[key] = !settings[key]; applySettings(); saveSettings(); render(); }));
+    els.customCardBack.addEventListener('input', () => { settings.customCardBack = els.customCardBack.value; settings.cardBack = 'custom-solid'; applySettings(); saveSettings(); });
+    els.customFelt.addEventListener('input', () => { settings.felt = els.customFelt.value; settings.feltDeep = darkenHex(settings.felt, .58); applySettings(); saveSettings(); });
+    els.aiPace.addEventListener('change', () => { settings.aiPace = els.aiPace.value; saveSettings(); });
+    bindDrawerDrag();
+  }
+
+  function bindDrawerDrag(){
+    let startX = 0, lastX = 0, dragging = false, startedOpen = false;
+    const onDown = ev => { dragging = true; startX = ev.touches ? ev.touches[0].clientX : ev.clientX; lastX = startX; startedOpen = els.drawer.classList.contains('open'); els.drawer.classList.add('dragging'); };
+    const onMove = ev => {
+      if(!dragging) return;
+      lastX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const dx = lastX - startX;
+      const w = els.drawer.getBoundingClientRect().width;
+      let translate = startedOpen ? clamp(dx, 0, w) : clamp(w + dx, 0, w);
+      els.drawer.style.transform = `translateX(${translate}px)`;
+    };
+    const onUp = () => {
+      if(!dragging) return;
+      dragging = false;
+      els.drawer.classList.remove('dragging');
+      els.drawer.style.transform = '';
+      const dx = lastX - startX;
+      if(startedOpen && dx > 70) closeDrawer();
+      else if(!startedOpen && dx < -45) openDrawer();
+      else els.drawer.classList.toggle('open', startedOpen);
+    };
+    els.drawerTab.addEventListener('pointerdown', onDown);
+    els.drawer.addEventListener('touchstart', onDown, {passive:true});
+    window.addEventListener('touchmove', onMove, {passive:true});
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  function openDrawer(page){ els.drawer.classList.add('open'); if(page) showDrawerPage(page); }
+  function closeDrawer(){ els.drawer.classList.remove('open'); document.body.classList.remove('splash-rules-open'); }
+  function toggleDrawer(){ els.drawer.classList.contains('open') ? closeDrawer() : openDrawer(); }
+  function showDrawerPage(page){ els.drawerHome.classList.add('hidden'); document.querySelectorAll('.subpage').forEach(p => p.classList.toggle('active', p.id === page)); openDrawer(); renderScores(); renderLog(); }
+  function showDrawerHome(){ els.drawerHome.classList.remove('hidden'); document.querySelectorAll('.subpage').forEach(p => p.classList.remove('active')); if(document.body.classList.contains('splashing')) closeDrawer(); }
+  function setSettingsTab(name){ document.querySelectorAll('.settingsTabBtn').forEach(b => b.classList.toggle('active', b.dataset.settingsTab === name)); document.querySelectorAll('.settingsTabPanel').forEach(p => p.classList.toggle('active', p.dataset.settingsPanel === name)); }
+
+  function openModal(id){ $(id)?.classList.add('open'); }
+  function closeModal(id){ $(id)?.classList.remove('open'); }
+  function toast(msg){ els.toast.textContent = msg; els.toast.classList.remove('show'); void els.toast.offsetWidth; els.toast.classList.add('show'); setTimeout(() => els.toast.classList.remove('show'), 1900); }
+
+  function loadSettings(){
+    try{ settings = {...defaultSettings(), ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || {})}; } catch(err){ settings = defaultSettings(); }
+  }
+  function saveSettings(){ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }catch(err){} }
+  function applySettings(){
+    document.body.classList.toggle('face-dark', settings.face === 'dark');
+    document.body.classList.toggle('face-light', settings.face !== 'dark');
+    document.body.dataset.cardback = settings.cardBack || 'classic';
+    document.body.classList.toggle('hide-suits', !settings.showSuits);
+    document.documentElement.style.setProperty('--felt', settings.felt || '#0a5a3c');
+    document.documentElement.style.setProperty('--felt-deep', settings.feltDeep || '#084a33');
+    document.documentElement.style.setProperty('--custom-card-back', settings.customCardBack || '#1e4e8c');
+    els.customCardBack.value = settings.customCardBack || '#1e4e8c';
+    els.customFelt.value = settings.felt || '#0a5a3c';
+    if(els.aiPace) els.aiPace.value = settings.aiPace || 'normal';
+    document.querySelectorAll('[data-face]').forEach(b => b.classList.toggle('active', b.dataset.face === settings.face));
+    document.querySelectorAll('[data-backstyle]').forEach(b => b.classList.toggle('active', b.dataset.backstyle === settings.cardBack));
+    document.querySelectorAll('.feltChip').forEach(b => b.classList.toggle('active', b.dataset.felt?.toLowerCase() === String(settings.felt).toLowerCase()));
+    document.querySelectorAll('[data-toggle]').forEach(b => b.classList.toggle('on', !!settings[b.dataset.toggle]));
+    els.cardBackSummary.textContent = BACK_LABELS[settings.cardBack] || 'Classic';
+  }
+  function darkenHex(hex, factor){
+    const clean = String(hex || '#0a5a3c').replace('#','');
+    const n = parseInt(clean.length === 3 ? clean.split('').map(c=>c+c).join('') : clean, 16);
+    if(!Number.isFinite(n)) return '#084a33';
+    const r = Math.round(((n>>16)&255) * factor), g = Math.round(((n>>8)&255) * factor), b = Math.round((n&255) * factor);
+    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+  }
+
+  function installManifest(){
+    // Static manifest.webmanifest is included for GitHub Pages / PWA install.
+  }
+
+  function registerServiceWorker(){
+    if(!('serviceWorker' in navigator)) return;
+    if(location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+
+  function createDeck(){
+    const deck = [];
+    for(const suit of SUITS){ for(const rank of RANKS){ deck.push({id:uid(),rank,suit,value:RANKS.indexOf(rank)+1}); } }
+    for(let i=deck.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [deck[i],deck[j]] = [deck[j],deck[i]]; }
+    return deck;
+  }
+  function createPlayers(aiCount){
+    const names = shuffle(AI_NAMES.slice()).slice(0, aiCount);
+    const players = [{id:0,name:'You',human:true,points:0,eliminated:false,card:null,revealed:false,known:{}}];
+    for(let i=1;i<=aiCount;i++) players.push({id:i,name:names[i-1] || `AI ${i}`,human:false,points:0,eliminated:false,card:null,revealed:false,known:{}});
+    return players;
+  }
+  function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+  async function startNewGame(aiCount){
+    aiCount = clamp(Number(aiCount) || 4, 3, 10);
+    clearTimeout(pendingTimer);
+    const players = createPlayers(aiCount);
+    const dealerId = players[Math.floor(Math.random()*players.length)].id;
+    state = {version:APP_VERSION,phase:'roundStart',round:0,players,dealerId,deck:[],turnOrder:[],turnIndex:0,log:[],humanWatching:false,awaitingHuman:false,busy:false,gameOver:false};
+    closeModal('setupModal'); closeDrawer();
+    await leaveSplash();
+    beginRound();
+  }
+
+  async function leaveSplash(){
+    if(!document.body.classList.contains('splashing')) return;
+    els.splash.classList.add('exit');
+    await delay(settings.animations ? 360 : 10);
+    els.splash.classList.add('hidden');
+    document.body.classList.remove('splashing','splash-rules-open');
+  }
+
+  function renderEmptyBoard(){
+    els.roundChip.textContent = 'New game';
+    els.dealerChip.textContent = 'Dealer: —';
+    els.activeChip.textContent = 'Players: —';
+    els.seatLayer.innerHTML = '';
+    els.turnPrompt.classList.remove('open');
+    if(els.centerDeck){ els.centerDeck.style.left = '50%'; els.centerDeck.style.top = '50%'; }
+    renderScores(); renderLog();
+  }
+
+  async function beginRound(){
+    clearTimeout(pendingTimer);
+    const active = activePlayers();
+    if(active.length <= 1){ return finishGame(active[0]); }
+    state.round += 1;
+    state.phase = 'turn'; state.awaitingHuman = false; state.busy = false;
+    state.deck = createDeck();
+    for(const p of state.players){
+      p.card = null; p.revealed = false; p.known = {};
+      if(!p.eliminated){ p.card = state.deck.pop(); p.known[p.id] = {...p.card}; }
+    }
+    if(!active.some(p => p.id === state.dealerId)) state.dealerId = nextActiveAfter(state.dealerId);
+    state.turnOrder = orderStartingLeftOfDealer();
+    state.turnIndex = 0;
+    transient = {speech:null, action:'New round dealt.', losers:[], scoreBumps:[], justRevealed:[], flipUpIds:[], ghostHolders:[]};
+    { const dealer = playerById(state.dealerId); addLog(`Round ${state.round}`, dealer?.human ? 'You are dealer and will act last.' : `${dealer?.name || 'Dealer'} is dealer and will act last.`); }
+    render(); saveGame();
+    pendingTimer = setTimeout(() => nextTurn(), 550);
+  }
+
+  function nextActiveAfter(oldId){
+    const ids = activeIds();
+    if(!ids.length) return null;
+    const allIds = state.players.map(p => p.id);
+    let idx = allIds.indexOf(oldId);
+    for(let k=1;k<=allIds.length;k++){ const id = allIds[(idx+k+allIds.length)%allIds.length]; if(ids.includes(id)) return id; }
+    return ids[0];
+  }
+  function orderStartingLeftOfDealer(){
+    const ids = activeIds();
+    const dealerPos = ids.indexOf(state.dealerId);
+    if(dealerPos < 0) return ids;
+    return ids.slice(dealerPos+1).concat(ids.slice(0,dealerPos+1));
+  }
+  function nextDealer(){ state.dealerId = nextActiveAfter(state.dealerId); }
+
+  async function nextTurn(){
+    if(!state || state.phase !== 'turn' || state.busy) return;
+    if(state.turnIndex >= state.turnOrder.length){ await endRound(); return; }
+    const pid = currentPlayerId();
+    const p = playerById(pid);
+    if(!p || p.eliminated){ state.turnIndex++; nextTurn(); return; }
+    transient.action = decidingSentence(p); transient.losers = []; transient.scoreBumps = []; transient.justRevealed = []; transient.flipUpIds = []; transient.ghostHolders = [];
+    render(); saveGame();
+    if(p.human && !state.humanWatching){
+      state.awaitingHuman = true;
+      render(); saveGame();
+      return;
+    }
+    await delay(aiDelay());
+    const choice = chooseAI(p);
+    await handleChoice(pid, choice, 'ai');
+    state.turnIndex++;
+    saveGame();
+    pendingTimer = setTimeout(() => nextTurn(), settings.aiPace === 'fast' ? 220 : 420);
+  }
+
+  function humanChoose(choice){
+    if(!state || !isHumanTurn() || state.busy || !state.awaitingHuman) return;
+    state.awaitingHuman = false;
+    handleChoice(0, choice, 'human').then(() => { state.turnIndex++; saveGame(); nextTurn(); });
+  }
+
+  function chooseAI(p){
+    const my = cardValue(p.card);
+    const knownOther = Object.entries(p.known || {}).filter(([id]) => Number(id) !== p.id).map(([,card]) => cardValue(card)).filter(Boolean);
+    const revealedOther = activePlayers().filter(o => o.id !== p.id && o.revealed).map(o => cardValue(o.card));
+    const knownLow = Math.min(...knownOther, ...revealedOther, Infinity);
+    if(p.card.rank === 'K' || p.card.rank === 'Q') return 'keep';
+    if(knownLow < my) return 'keep';
+    if(isDealer(p.id)){
+      if(my <= 2) return 'trade';
+      if(my <= 4) return knownLow < my ? 'keep' : 'trade';
+      if(my <= 6) return (activePlayers().length >= 6 || p.points >= 2) ? 'trade' : 'keep';
+      if(my <= 8) return (activePlayers().length >= 9 && p.points >= 2) ? 'trade' : 'keep';
+      return 'keep';
+    }
+    const target = playerById(state.turnOrder[state.turnIndex + 1]);
+    const previous = playerById(state.turnOrder[state.turnIndex - 1] ?? state.turnOrder[state.turnOrder.length - 1]);
+    if(target?.revealed && target.card.rank === 'K') return my <= 2 ? 'trade' : 'keep';
+    if(my <= 2) return 'trade';
+    if(my <= 4) return 'trade';
+    if(my <= 6) return activePlayers().length >= 6 || p.points >= 2 ? 'trade' : 'keep';
+    if(my <= 8 && activePlayers().length >= 8 && p.points >= 2 && !(target?.revealed && target.card.rank === 'Q' && previous && isSpecial(previous.card))) return 'trade';
+    return 'keep';
+  }
+
+  async function handleChoice(pid, choice, actor){
+    const p = playerById(pid);
+    if(!p || p.eliminated || !p.card) return;
+    state.busy = true;
+    transient.losers = []; transient.scoreBumps = []; transient.justRevealed = []; transient.flipUpIds = []; transient.ghostHolders = [];
+    if(choice === 'keep'){
+      transient.speech = {id:pid, text:'Stay', tone:'blue'};
+      transient.action = staySentence(p);
+      addLog(staySentence(p).replace(/\.$/, ''), `${nameOf(p)} kept ${p.human ? cardName(p.card) : 'their card'}.`);
+      render();
+      await delay(settings.animations ? 560 : 80);
+      transient.speech = null; state.busy = false; render(); return;
+    }
+    transient.speech = null;
+    transient.action = isDealer(pid) ? (p.human ? 'You trade with the deck.' : `${p.name} trades with the deck.`) : (p.human ? 'You try to trade.' : `${p.name} tries to trade.`);
+    render(); await delay(settings.animations ? 120 : 20);
+    if(isDealer(pid)) await dealerTrade(p); else await neighborTrade(p);
+    transient.speech = null; state.busy = false; render();
+  }
+
+  async function dealerTrade(p){
+    const newCard = state.deck.pop();
+    if(!newCard){ addLog('Deck empty', `${nameOf(p)} could not trade with the deck.`); return; }
+    const old = {...p.card};
+    const humanInvolved = p.id === 0;
+    await animateSwap(p.id, 'deck');
+    p.card = newCard;
+    p.known = {[p.id]: {...newCard}};
+    clearStaleKnowledgeFor(p.id);
+    addLog(p.human ? 'You trade with deck' : `${p.name} trades with deck`, `${nameOf(p)} swapped ${p.human || state.humanWatching ? cardName(old) : 'a card'} with the deck.`);
+    transient.action = `${nameOf(p)} took a hidden deck card.`;
+    await renderTradeResult(humanInvolved);
+  }
+
+  async function neighborTrade(p){
+    const target = playerById(state.turnOrder[state.turnIndex + 1]);
+    if(!target){ return; }
+    if(target.card.rank === 'K'){
+      const attempt = await animateAttemptToward(p.id, target.id);
+      await revealCard(target.id, 'King!');
+      transient.action = `${possessiveName(target)} King blocks the trade.`;
+      render();
+      addLog('King blocks trade', `${nameOf(p)} tried to trade with ${objectName(target)}, but ${objectName(target)} had a King.`);
+      await returnAttemptHome(attempt, p);
+      await delay(settings.animations ? 240 : 40);
+      return;
+    }
+    if(target.card.rank === 'Q'){
+      const attempt = await animateAttemptToward(p.id, target.id);
+      await revealCard(target.id, 'Queen!');
+      const prevId = state.turnOrder[state.turnIndex - 1] ?? state.turnOrder[state.turnOrder.length - 1];
+      const previous = playerById(prevId);
+      if(!previous || previous.id === p.id){ await returnAttemptHome(attempt, p); return; }
+      transient.action = `${possessiveName(target)} Queen redirects the trade.`;
+      render();
+      if(isSpecial(previous.card)){
+        await moveAttemptToward(attempt, previous.id);
+        await revealCard(previous.id, `${previous.card.rank === 'K' ? 'King' : 'Queen'}!`);
+        transient.action = `${possessiveName(previous)} ${previous.card.rank} stops the forced trade.`;
+        render();
+        addLog('Queen redirect stopped', `${possessiveName(target)} Queen sent ${objectName(p)} backward, but ${objectName(previous)} had a ${previous.card.rank}.`);
+        await returnAttemptHome(attempt, p);
+        await delay(settings.animations ? 240 : 40);
+        return;
+      }
+      addLog('Queen redirects trade', `${possessiveName(target)} Queen forced ${objectName(p)} to trade with ${objectName(previous)}.`);
+      await completeRedirectedSwapFromAttempt(p, previous, attempt, 'Forced trade');
+      return;
+    }
+    await swapPlayers(p, target, 'Trade');
+  }
+
+  async function revealCard(pid, label){
+    const p = playerById(pid);
+    if(!p || p.revealed) return;
+    p.revealed = true;
+    for(const observer of activePlayers()) observer.known[pid] = {...p.card};
+    transient.speech = {id:pid, text:label, tone:p.card.rank === 'K' ? 'gold' : 'red'};
+    transient.justRevealed = [pid];
+    render();
+    await delay(settings.animations ? 680 : 80);
+    transient.justRevealed = [];
+  }
+
+  async function swapPlayers(a, b, label){
+    const oldA = {...a.card}, oldB = {...b.card};
+    const humanInvolved = a.id === 0 || b.id === 0;
+    await animateSwap(a.id, b.id);
+    applyPlayerSwap(a, b, oldA, oldB);
+    transient.action = `${nameOf(a)} traded with ${objectName(b)}.`;
+    addLog(label, `${nameOf(a)} swapped cards with ${objectName(b)}.`);
+    await renderTradeResult(humanInvolved);
+  }
+
+  function applyPlayerSwap(a, b, oldA={...a.card}, oldB={...b.card}){
+    a.card = oldB; b.card = oldA;
+    a.known[a.id] = {...a.card}; a.known[b.id] = {...b.card};
+    b.known[b.id] = {...b.card}; b.known[a.id] = {...a.card};
+    propagateSwapKnowledge(a.id, b.id, oldA, oldB);
+  }
+
+  async function animateAttemptToward(fromId, targetId){
+    if(!settings.animations) return null;
+    await frame();
+    const fromEl = document.querySelector(`[data-card-holder="${fromId}"]`);
+    const targetEl = document.querySelector(`[data-card-holder="${targetId}"]`);
+    if(!fromEl || !targetEl) return null;
+    const forceBack = fromId === 0 && !!fromEl.querySelector('.card');
+    if(forceBack) await animateHumanCardFaceDown(fromEl);
+    const start = visibleFlightRect(fromEl);
+    const target = visibleFlightRect(targetEl);
+    const clone = makeFlightClone(fromEl, start, forceBack);
+    transient.ghostHolders = [fromId];
+    render();
+    await frame(); await frame();
+    const approach = approachRect(start, target);
+    clone.style.transform = `translate(${approach.left}px,${approach.top}px)`;
+    await delay(660);
+    return {clone, fromId, start, current:approach};
+  }
+
+  async function moveAttemptToward(flight, targetId){
+    if(!settings.animations || !flight?.clone) return;
+    await frame();
+    const targetEl = document.querySelector(`[data-card-holder="${targetId}"]`);
+    if(!targetEl) return;
+    const current = flight.clone.getBoundingClientRect();
+    const target = visibleFlightRect(targetEl);
+    const approach = approachRect(current, target);
+    flight.clone.style.transform = `translate(${approach.left}px,${approach.top}px)`;
+    flight.current = approach;
+    await delay(660);
+  }
+
+  async function returnAttemptHome(flight, player){
+    if(!settings.animations || !flight?.clone){
+      transient.ghostHolders = [];
+      if(player?.id === 0) await renderTradeResult(true); else render();
+      return;
+    }
+    const homeEl = document.querySelector(`[data-card-holder="${player.id}"]`);
+    const home = homeEl ? visibleFlightRect(homeEl) : flight.start;
+    flight.clone.style.transform = `translate(${home.left}px,${home.top}px)`;
+    await delay(660);
+    flight.clone.remove();
+    transient.ghostHolders = [];
+    if(player.id === 0) await renderTradeResult(true);
+    else render();
+  }
+
+  async function completeRedirectedSwapFromAttempt(a, b, flight, label){
+    if(!settings.animations || !flight?.clone){
+      const oldA = {...a.card}, oldB = {...b.card};
+      applyPlayerSwap(a, b, oldA, oldB);
+      transient.action = `${nameOf(a)} traded with ${objectName(b)}.`;
+      addLog(label, `${nameOf(a)} swapped cards with ${objectName(b)}.`);
+      await renderTradeResult(a.id === 0 || b.id === 0);
+      return;
+    }
+    await frame();
+    const bEl = document.querySelector(`[data-card-holder="${b.id}"]`);
+    if(!bEl){ await returnAttemptHome(flight, a); return; }
+    const bForceBack = b.id === 0 && !!bEl.querySelector('.card');
+    if(bForceBack) await animateHumanCardFaceDown(bEl);
+    const bRect = visibleFlightRect(bEl);
+    const bClone = makeFlightClone(bEl, bRect, bForceBack);
+    transient.ghostHolders = [a.id, b.id];
+    render();
+    await frame(); await frame();
+    flight.clone.style.transform = `translate(${bRect.left}px,${bRect.top}px)`;
+    bClone.style.transform = `translate(${flight.start.left}px,${flight.start.top}px)`;
+    await delay(790);
+    flight.clone.remove(); bClone.remove();
+    transient.ghostHolders = [];
+    const oldA = {...a.card}, oldB = {...b.card};
+    applyPlayerSwap(a, b, oldA, oldB);
+    transient.action = `${nameOf(a)} traded with ${objectName(b)}.`;
+    addLog(label, `${nameOf(a)} swapped cards with ${objectName(b)}.`);
+    await renderTradeResult(a.id === 0 || b.id === 0);
+  }
+
+  function approachRect(from, target){
+    return {left: target.left + (from.left - target.left) * .18, top: target.top + (from.top - target.top) * .18, width: from.width, height: from.height};
+  }
+
+  function sameCard(a,b){ return a && b && a.id === b.id; }
+  function propagateSwapKnowledge(aId, bId, oldA, oldB){
+    for(const observer of activePlayers()){
+      const knewA = sameCard(observer.known?.[aId], oldA);
+      const knewB = sameCard(observer.known?.[bId], oldB);
+      if(knewA) observer.known[bId] = {...oldA}; else if(observer.known) delete observer.known[bId];
+      if(knewB) observer.known[aId] = {...oldB}; else if(observer.known && observer.id !== aId) delete observer.known[aId];
+      if(observer.id === aId) observer.known[aId] = {...playerById(aId).card};
+      if(observer.id === bId) observer.known[bId] = {...playerById(bId).card};
+    }
+  }
+  function clearStaleKnowledgeFor(pid){ for(const observer of activePlayers()){ if(observer.id !== pid && observer.known) delete observer.known[pid]; } }
+
+  async function animateSwap(aId, bId){
+    if(!settings.animations) return;
+    await frame();
+    const aEl = document.querySelector(`[data-card-holder="${aId}"]`);
+    const bEl = document.querySelector(`[data-card-holder="${bId}"]`);
+    if(!aEl || !bEl) return;
+    const forceBack = new Set();
+    const humanEl = aId === 0 ? aEl : bId === 0 ? bEl : null;
+    if(humanEl && humanEl.querySelector('.card')){
+      await animateHumanCardFaceDown(humanEl);
+      forceBack.add('0');
+    }
+    const ar = visibleFlightRect(aEl), br = visibleFlightRect(bEl);
+    const aClone = makeFlightClone(aEl, ar, forceBack.has(String(aId))), bClone = makeFlightClone(bEl, br, forceBack.has(String(bId)));
+    aEl.classList.add('ghosting'); bEl.classList.add('ghosting');
+    await frame();
+    aClone.style.transform = `translate(${br.left}px,${br.top}px)`;
+    bClone.style.transform = `translate(${ar.left}px,${ar.top}px)`;
+    await delay(790);
+    aClone.remove(); bClone.remove();
+    aEl.classList.remove('ghosting'); bEl.classList.remove('ghosting');
+  }
+  async function animateHumanCardFaceDown(humanEl){
+    const rect = visibleFlightRect(humanEl);
+    const overlay = document.createElement('div');
+    overlay.className = 'flightCard flipOnly';
+    overlay.style.width = rect.width + 'px'; overlay.style.height = rect.height + 'px';
+    overlay.style.setProperty('--card-w', rect.width + 'px');
+    overlay.style.setProperty('--card-h', rect.height + 'px');
+    overlay.style.transform = `translate(${rect.left}px,${rect.top}px)`;
+    overlay.innerHTML = humanEl.innerHTML;
+    document.body.appendChild(overlay);
+    humanEl.classList.add('ghosting');
+    await frame();
+    overlay.querySelector('.card')?.classList.add('flipFaceDown');
+    await delay(180);
+    overlay.innerHTML = '<div class="backCard flipBackIn"></div>';
+    await delay(190);
+    overlay.remove();
+  }
+  async function renderTradeResult(flipHumanUp){
+    if(flipHumanUp && settings.animations){ transient.flipUpIds = [0]; }
+    render();
+    if(flipHumanUp && settings.animations){
+      await delay(470);
+      transient.flipUpIds = [];
+      render();
+    } else {
+      await delay(settings.animations ? 180 : 20);
+    }
+  }
+  function visibleFlightRect(el){
+    if(el.dataset.cardHolder === 'deck'){
+      const topDeckCard = el.querySelector('.backCard:last-child');
+      if(topDeckCard) return topDeckCard.getBoundingClientRect();
+    }
+    return el.getBoundingClientRect();
+  }
+  function makeFlightClone(el, rect, forceBack=false){
+    const wrap = document.createElement('div');
+    const isDeck = el.dataset.cardHolder === 'deck';
+    wrap.className = isDeck ? 'flightCard deckFlight' : 'flightCard';
+    wrap.style.width = rect.width + 'px'; wrap.style.height = rect.height + 'px';
+    wrap.style.setProperty('--card-w', rect.width + 'px');
+    wrap.style.setProperty('--card-h', rect.height + 'px');
+    wrap.style.transform = `translate(${rect.left}px,${rect.top}px)`;
+    wrap.innerHTML = (isDeck || forceBack) ? '<div class="backCard"></div>' : el.innerHTML;
+    document.body.appendChild(wrap);
+    return wrap;
+  }
+
+  async function endRound(){
+    state.phase = 'scoring'; state.busy = true; state.awaitingHuman = false;
+    const flipIds = activePlayers().filter(p => !p.revealed).map(p => p.id);
+    for(const p of activePlayers()) p.revealed = true;
+    transient.action = 'Cards revealed.'; transient.justRevealed = flipIds;
+    render(); saveGame();
+    await delay(settings.animations ? 900 : 120);
+    transient.justRevealed = [];
+    render();
+    await delay(settings.animations ? 650 : 80);
+    const active = activePlayers();
+    const min = Math.min(...active.map(p => cardValue(p.card)));
+    const losers = active.filter(p => cardValue(p.card) === min);
+    const wouldScores = new Map(losers.map(p => [p.id, p.points + 1]));
+    const futureActive = active.filter(p => !(wouldScores.has(p.id) && wouldScores.get(p.id) >= 3));
+    transient.losers = losers.map(p => p.id); transient.action = losers.length > 1 ? 'Lowest cards lose.' : lowestSentence(losers[0]);
+    render(); await delay(settings.animations ? 1250 : 150);
+    let push = false;
+    if(futureActive.length === 0){
+      push = true;
+      transient.action = 'Push: everyone left would be eliminated. Replay with the same players.';
+      addLog('Push round', 'Everyone left would have been eliminated together, so no one gets a point.');
+    } else {
+      const scoreBumps = losers.map(p => ({id:p.id, from:p.points, to:p.points + 1}));
+      transient.scoreBumps = scoreBumps;
+      render();
+      await animateScoreBumps(scoreBumps);
+      for(const item of scoreBumps){
+        const p = playerById(item.id);
+        if(p) p.points = item.to;
+      }
+      transient.scoreBumps = [];
+      render();
+      const eliminated = losers.filter(p => p.points >= 3);
+      for(const p of eliminated){ p.eliminated = true; p.revealed = true; addLog(p.human ? 'You are out' : `${p.name} is out`, `${nameOf(p)} reached 3 points and ${p.human ? 'were' : 'was'} eliminated.`); }
+    }
+    state.busy = false;
+    render(); saveGame();
+    showRoundSummary(losers, push);
+  }
+
+  async function animateScoreBumps(scoreBumps){
+    if(!scoreBumps?.length){ return; }
+    if(!settings.animations){
+      for(const item of scoreBumps){
+        const pill = document.querySelector(`[data-score-id="${item.id}"]`);
+        if(pill) pill.textContent = `${item.to}/3`;
+      }
+      return;
+    }
+
+    const jobs = scoreBumps.map(item => {
+      const pill = document.querySelector(`[data-score-id="${item.id}"]`);
+      const seat = document.querySelector(`[data-seat-id="${item.id}"]`);
+      if(!pill || !seat){ return null; }
+      const rect = pill.getBoundingClientRect();
+      const clone = pill.cloneNode(true);
+      clone.className = 'scorePillClone';
+      clone.removeAttribute('data-score-id');
+      clone.innerHTML = `<span class="scoreNum">${item.from}</span><span class="scoreSlash">/3</span>`;
+      clone.style.left = `${rect.left}px`;
+      clone.style.top = `${rect.top}px`;
+      clone.style.width = `${Math.max(1, rect.width)}px`;
+      clone.style.height = `${Math.max(1, rect.height)}px`;
+      document.body.appendChild(clone);
+      pill.classList.add('scorePillHidden');
+      return {item, pill, clone, num: clone.querySelector('.scoreNum'), rect};
+    }).filter(Boolean);
+
+    if(!jobs.length){ return; }
+    const grow = 3;
+    const appRect = (els.app || document.body).getBoundingClientRect();
+    const margin = 10;
+    const appCenterX = appRect.left + appRect.width / 2;
+    const appCenterY = appRect.top + appRect.height / 2;
+    for(const job of jobs){
+      const rect = job.rect;
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const scaledLeft = rect.left - ((grow - 1) * rect.width / 2);
+      const scaledRight = rect.right + ((grow - 1) * rect.width / 2);
+      const scaledTop = rect.top - ((grow - 1) * rect.height / 2);
+      const scaledBottom = rect.bottom + ((grow - 1) * rect.height / 2);
+      const minDx = (appRect.left + margin) - scaledLeft;
+      const maxDx = (appRect.right - margin) - scaledRight;
+      const minDy = (appRect.top + margin) - scaledTop;
+      const maxDy = (appRect.bottom - margin) - scaledBottom;
+      const towardX = Math.sign(appCenterX - centerX) || 0;
+      const towardY = Math.sign(appCenterY - centerY) || 0;
+      const baseDx = towardX * 16;
+      const baseDy = towardY * 12;
+      job.dx = Math.max(minDx, Math.min(maxDx, baseDx));
+      job.dy = Math.max(minDy, Math.min(maxDy, baseDy));
+      if(maxDx < minDx){ job.dx = towardX * Math.min(30, Math.abs(appCenterX - centerX) * .22); }
+      if(maxDy < minDy){ job.dy = towardY * Math.min(24, Math.abs(appCenterY - centerY) * .18); }
+    }
+    try{
+      await Promise.all(jobs.map(job => job.clone.animate([
+        {transform:'translate(0px, 0px) scale(1)', opacity:1, filter:'brightness(1)'},
+        {transform:`translate(${job.dx}px, ${job.dy}px) scale(${grow})`, opacity:1, filter:'brightness(1.18)'}
+      ], {duration:320, easing:'cubic-bezier(.20,.82,.22,1)', fill:'forwards'}).finished.catch(()=>{})));
+
+      await delay(70);
+      await Promise.all(jobs.map(async job => {
+        if(job.num){
+          job.num.classList.add('rollOut');
+          await job.num.getAnimations().at(-1)?.finished.catch(()=>{});
+          job.num.classList.remove('rollOut');
+          job.num.textContent = String(job.item.to);
+          job.pill.textContent = `${job.item.to}/3`;
+          job.num.classList.add('rollIn');
+          await job.num.getAnimations().at(-1)?.finished.catch(()=>{});
+          job.num.classList.remove('rollIn');
+        }else{
+          job.clone.textContent = `${job.item.to}/3`;
+          job.pill.textContent = `${job.item.to}/3`;
+        }
+      }));
+
+      await delay(95);
+      await Promise.all(jobs.map(job => job.clone.animate([
+        {transform:`translate(${job.dx}px, ${job.dy}px) scale(${grow})`, opacity:1, filter:'brightness(1)'},
+        {transform:'translate(0px, 0px) scale(1)', opacity:1, filter:'brightness(1)'}
+      ], {duration:370, easing:'cubic-bezier(.22,.82,.22,1)', fill:'forwards'}).finished.catch(()=>{})));
+
+      for(const job of jobs){
+        job.pill.classList.remove('scorePillHidden');
+      }
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }finally{
+      for(const job of jobs){
+        job.clone.remove();
+        job.pill?.classList.remove('scorePillHidden');
+      }
+    }
+  }
+
+  function showRoundSummary(losers, push){
+    const active = activePlayers();
+    const human = playerById(0);
+    const winner = active.length === 1 ? active[0] : null;
+    els.roundModalTitle.textContent = push ? 'Push Round' : 'Round Complete';
+    const rows = state.players.map(p => `<div class="rankRow" style="opacity:${p.eliminated ? .48 : 1}"><div class="rankNum">${p.eliminated ? '×' : p.points}</div><div><div class="rankName">${escapeHtml(p.name)}${p.id === state.dealerId ? ' · Dealer' : ''}</div><div class="smallHelp">${p.card ? cardName(p.card) : 'Out'}${losers.some(l => l.id === p.id) ? ' · lowest' : ''}</div></div><div class="rankPts">${p.eliminated ? 'OUT' : `${p.points}/3`}</div></div>`).join('');
+    els.roundModalBody.innerHTML = `${push ? '<p>No point was awarded because everyone left would have been eliminated together.</p>' : '<p>The lowest card or tied lowest cards took 1 point.</p>'}${rows}`;
+    if(winner){ closeModal('roundModal'); finishGame(winner); return; }
+    state.phase = 'roundOver';
+    nextDealer();
+    if(human.eliminated && !state.humanWatching){ closeModal('roundModal'); saveGame(); openModal('watchModal'); return; }
+    els.nextRoundBtn.textContent = 'Next Round';
+    openModal('roundModal');
+    saveGame();
+  }
+
+  function finishGame(winner){
+    if(!winner) return;
+    state.phase = 'gameOver'; state.gameOver = true;
+    render(); clearSave();
+    els.gameOverBody.innerHTML = winner.human ? `<p><b>You</b> win the game.</p>${renderStandingsHtml()}` : `<p><b>${escapeHtml(winner.name)}</b> wins the game.</p>${renderStandingsHtml()}`;
+    openModal('gameOverModal');
+  }
+  function exitToSplash(clear){
+    if(clear) clearSave();
+    clearTimeout(pendingTimer);
+    state = null;
+    renderEmptyBoard();
+    updateContinueVisibility();
+    els.splash.classList.remove('hidden','exit');
+    document.body.classList.add('splashing');
+    closeDrawer();
+  }
+
+  function render(){
+    if(!state){ renderEmptyBoard(); return; }
+    els.roundChip.textContent = `Round ${state.round || 1}`;
+    els.dealerChip.textContent = `Dealer: ${playerById(state.dealerId)?.name || '—'}`;
+    els.activeChip.textContent = `Players: ${activePlayers().length}`;
+    els.actionStatus.textContent = transient.action || '';
+    renderSeats(); renderPrompt(); renderScores(); renderLog();
+  }
+
+  function renderSeats(){
+    const html = state.players.map(p => seatHtml(p)).join('');
+    els.seatLayer.innerHTML = html;
+    positionSeats();
+  }
+  function seatHtml(p){
+    const current = currentPlayerId() === p.id && state.phase === 'turn';
+    const classes = ['seat', p.human ? 'human' : '', p.eliminated ? 'eliminated' : '', current ? 'current' : '', isDealer(p.id) && !p.eliminated ? 'dealer' : ''].filter(Boolean).join(' ');
+    const showFace = p.card && (p.human && !p.eliminated || p.revealed || state.phase === 'scoring' || state.gameOver);
+    const card = p.card ? (showFace ? cardHtml(p.card, transient.losers.includes(p.id), transient.justRevealed.includes(p.id) || transient.flipUpIds?.includes(p.id)) : '<div class="backCard"></div>') : '<div class="backCard" style="opacity:.25"></div>';
+    const speech = transient.speech?.id === p.id ? `<div class="speech ${transient.speech.tone || ''}">${escapeHtml(transient.speech.text)}</div>` : '';
+    const status = p.eliminated ? 'OUT' : current ? 'TURN' : p.revealed ? cardName(p.card) : '';
+    const scoreBump = transient.scoreBumps.find(item => item.id === p.id);
+    const scoreText = `${scoreBump ? scoreBump.from : p.points}/3`;
+    const ghostCard = transient.ghostHolders?.map(String).includes(String(p.id)) ? ' ghosting' : '';
+    return `<div class="${classes}" data-seat-id="${p.id}">${speech}<div class="seatTop"><div class="seatName">${escapeHtml(p.name)}</div><div class="scorePill" data-score-id="${p.id}">${scoreText}</div></div><div class="seatCardWrap${ghostCard}" data-card-holder="${p.id}">${card}</div><div class="seatStatus">${status}</div></div>`;
+  }
+  function positionSeats(){
+    const table = els.table.getBoundingClientRect();
+    const w = table.width, h = table.height;
+    const ai = state.players.filter(p => p.id !== 0);
+    for(const p of state.players){
+      const el = document.querySelector(`[data-seat-id="${p.id}"]`);
+      if(!el) continue;
+      if(p.id === 0){ el.style.left = '50%'; el.style.top = `calc(100% - ${p.eliminated ? 54 : 68}px)`; continue; }
+      const visibleAi = ai;
+      const i = visibleAi.findIndex(x => x.id === p.id);
+      const n = Math.max(1, visibleAi.length);
+      const angle = (155 + (n === 1 ? 115 : i * (230/(n-1)))) * Math.PI/180;
+      const rx = w * .39, ry = h * .38;
+      const x = w/2 + Math.cos(angle)*rx;
+      const y = h/2 + Math.sin(angle)*ry;
+      el.style.left = `${clamp(x, 56, w-56)}px`;
+      el.style.top = `${clamp(y, 64, h-112)}px`;
+    }
+    positionDeckNearDealer();
+  }
+  function positionDeckNearDealer(){
+    if(!els.centerDeck || !state){ return; }
+    const tableRect = els.table.getBoundingClientRect();
+    const dealerEl = document.querySelector(`[data-seat-id="${state.dealerId}"]`);
+    const starterId = state.turnOrder?.[0];
+    const starterEl = starterId != null ? document.querySelector(`[data-seat-id="${starterId}"]`) : null;
+    if(!dealerEl || !starterEl){ els.centerDeck.style.left = '50%'; els.centerDeck.style.top = '50%'; return; }
+    const d = dealerEl.getBoundingClientRect();
+    const st = starterEl.getBoundingClientRect();
+    let x = ((d.left + d.width / 2) + (st.left + st.width / 2)) / 2 - tableRect.left;
+    let y = ((d.top + d.height / 2) + (st.top + st.height / 2)) / 2 - tableRect.top;
+    els.centerDeck.style.left = `${clamp(x, 56, tableRect.width - 56)}px`;
+    els.centerDeck.style.top = `${clamp(y, 70, tableRect.height - 122)}px`;
+  }
+  function cardHtml(card, loser=false, flash=false){
+    const cls = ['card', loser ? 'loser' : '', flash ? 'revealedFlash' : ''].filter(Boolean).join(' ');
+    return `<div class="${cls}" data-rank="${card.rank}" data-suit="${card.suit}"><div class="cornerIndex"><span class="cornerRank">${card.rank}</span><span class="cornerSuit">${card.suit}</span></div><div class="cardCenter">${card.rank}</div><div class="suitLine">${card.suit}</div></div>`;
+  }
+  function renderPrompt(){
+    if(isHumanTurn() && state.awaitingHuman && !state.busy){
+      const p = playerById(0);
+      els.turnPrompt.classList.add('open');
+      els.promptTitle.textContent = `Your card is ${cardName(p.card)}`;
+      els.tradeBtn.textContent = 'Trade';
+      const next = isDealer(0) ? null : playerById(state.turnOrder[state.turnIndex + 1]);
+      els.promptHint.textContent = isDealer(0) ? 'You are dealer. Trade with the deck or stay.' : `Trade attempts to swap with ${next?.name || 'the next player'}.`;
+    } else els.turnPrompt.classList.remove('open');
+  }
+  function renderScores(){
+    if(!els.scoreList) return;
+    els.scoreList.innerHTML = renderStandingsHtml(false);
+  }
+  function renderStandingsHtml(wrap=true){
+    if(!state) return '<p class="smallHelp">Start a game to see scores.</p>';
+    const sorted = state.players.slice().sort((a,b) => Number(a.eliminated)-Number(b.eliminated) || a.points-b.points || a.name.localeCompare(b.name));
+    return sorted.map((p,i) => `<div class="rankRow" style="opacity:${p.eliminated ? .48 : 1}"><div class="rankNum">${p.eliminated ? '×' : i+1}</div><div class="rankName">${escapeHtml(p.name)}</div><div class="rankPts">${p.eliminated ? 'OUT' : `${p.points}/3`}</div></div>`).join('');
+  }
+  function renderLog(){
+    if(!els.logEntries) return;
+    if(!state || !state.log.length){ els.logEntries.innerHTML = '<div class="logEntry"><strong>No log yet</strong><p>Trades, blocks, reveals, and scoring will appear here.</p></div>'; return; }
+    els.logEntries.innerHTML = state.log.slice(-30).reverse().map(e => `<div class="logEntry"><strong>${escapeHtml(e.title)}</strong><p>${escapeHtml(e.text)}</p></div>`).join('');
+  }
+  function addLog(title, text){ if(!state) return; state.log.push({title,text,at:Date.now()}); if(state.log.length > 80) state.log.splice(0, state.log.length-80); }
+
+  function saveGame(){
+    if(!state || state.gameOver) return;
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateContinueVisibility(); }catch(err){}
+  }
+  function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); updateContinueVisibility(); }catch(err){} }
+  function getValidSave(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if(!raw || typeof raw !== 'object') return null;
+      if(!Array.isArray(raw.players) || raw.players.length < 4 || raw.players.length > 11) return null;
+      if(!raw.players.some(p => p.id === 0 && p.human)) return null;
+      if(!Array.isArray(raw.turnOrder) || !Number.isFinite(Number(raw.round))) return null;
+      if(raw.gameOver) return null;
+      return raw;
+    }catch(err){ return null; }
+  }
+  function updateContinueVisibility(){ els.continueBtn?.classList.toggle('hidden', !getValidSave()); }
+  async function continueGame(){
+    const saved = getValidSave();
+    if(!saved){ clearSave(); toast('No valid saved game found.'); return; }
+    state = saved; state.version = APP_VERSION; state.busy = false; transient = {speech:null, action:'', losers:[], scoreBumps:[], justRevealed:[], flipUpIds:[], ghostHolders:[]};
+    await leaveSplash();
+    render();
+    if((state.phase === 'roundOver' || state.phase === 'scoring') && activePlayers().length > 1){
+      if(playerById(0)?.eliminated && !state.humanWatching) openModal('watchModal');
+      else { els.roundModalTitle.textContent = 'Continue Game'; els.roundModalBody.innerHTML = '<p>This saved game was between rounds. Continue to deal the next round.</p>' + renderStandingsHtml(); openModal('roundModal'); }
+      return;
+    }
+    if(state.phase === 'turn' && !isHumanTurn()) pendingTimer = setTimeout(() => nextTurn(), 500);
+  }
+
+  function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+})();
+</script>
+</body>
+</html>
