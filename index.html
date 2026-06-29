@@ -193,9 +193,10 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
 <script>
 (() => {
   'use strict';
-  const APP_VERSION = 'v43';
+  const APP_VERSION = 'v44';
   const SAVE_KEY = 'synSave.v1';
   const SETTINGS_KEY = 'synSettings.v1';
+  let drawerTapClickUntil = 0;
   const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
   const SUITS = ['♠','♥','♦','♣'];
   const AI_NAMES = ['Mabel','Otis','Nora','Felix','June','Hank','Ruby','Theo','Ivy','Gus','Pearl','Lena','Milo','Vera','Archie','Cleo'];
@@ -309,7 +310,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     els.exitAfterElimBtn.addEventListener('click', () => { closeModal('watchModal'); exitToSplash(true); });
     els.gameOverSplashBtn.addEventListener('click', () => { closeModal('gameOverModal'); exitToSplash(true); });
     document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
-    els.drawerTab.addEventListener('click', () => toggleDrawer());
+    els.drawerTab.addEventListener('click', ev => { if(drawerTapClickUntil && Date.now() < drawerTapClickUntil){ ev.preventDefault(); return; } toggleDrawer(); });
     els.closeDrawer.addEventListener('click', closeDrawer);
     document.querySelectorAll('.drawerMenuBtn[data-page]').forEach(btn => btn.addEventListener('click', () => showDrawerPage(btn.dataset.page)));
     document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', showDrawerHome));
@@ -328,22 +329,45 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
   }
 
   function bindDrawerDrag(){
-    let startX = 0, lastX = 0, dragging = false, startedOpen = false;
-    const onDown = ev => { dragging = true; startX = ev.touches ? ev.touches[0].clientX : ev.clientX; lastX = startX; startedOpen = els.drawer.classList.contains('open'); els.drawer.classList.add('dragging'); };
+    let startX = 0, startY = 0, lastX = 0, lastY = 0, dragging = false, startedOpen = false, startedOnTab = false;
+    const getPoint = ev => {
+      const p = ev.touches ? ev.touches[0] : (ev.changedTouches ? ev.changedTouches[0] : ev);
+      return {x:p.clientX || 0, y:p.clientY || 0};
+    };
+    const onDown = ev => {
+      if(dragging) return;
+      const p = getPoint(ev);
+      dragging = true;
+      startX = lastX = p.x;
+      startY = lastY = p.y;
+      startedOpen = els.drawer.classList.contains('open');
+      startedOnTab = ev.currentTarget === els.drawerTab || !!ev.target.closest?.('#drawerTab');
+      els.drawer.classList.add('dragging');
+    };
     const onMove = ev => {
       if(!dragging) return;
-      lastX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const p = getPoint(ev);
+      lastX = p.x;
+      lastY = p.y;
       const dx = lastX - startX;
       const w = els.drawer.getBoundingClientRect().width;
       let translate = startedOpen ? clamp(dx, 0, w) : clamp(w + dx, 0, w);
       els.drawer.style.transform = `translateX(${translate}px)`;
     };
-    const onUp = () => {
+    const onUp = ev => {
       if(!dragging) return;
+      const p = getPoint(ev || {});
+      if(p.x || p.y){ lastX = p.x; lastY = p.y; }
       dragging = false;
       els.drawer.classList.remove('dragging');
       els.drawer.style.transform = '';
       const dx = lastX - startX;
+      const dy = lastY - startY;
+      if(startedOnTab && Math.abs(dx) < 14 && Math.abs(dy) < 14){
+        drawerTapClickUntil = Date.now() + 450;
+        toggleDrawer();
+        return;
+      }
       if(startedOpen && dx > 70) closeDrawer();
       else if(!startedOpen && dx < -45) openDrawer();
       else els.drawer.classList.toggle('open', startedOpen);
