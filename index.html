@@ -170,12 +170,12 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
           <div class="controlRow"><div><div class="controlLabel">Animations</div><p class="smallHelp">Card swaps, flips, speech bubbles, and point bumps.</p></div><button class="toggle on" data-toggle="animations" aria-label="Toggle animations"></button></div>
           <div class="controlRow"><span class="controlLabel">Show suits</span><button class="toggle on" data-toggle="showSuits" aria-label="Toggle show suits"></button></div>
           <div class="controlRow"><label for="aiPace">AI pace</label><select id="aiPace"><option value="fast">Fast</option><option value="normal" selected>Normal</option><option value="slow">Slow</option></select></div>
-          <div class="controlRow"><div><div class="controlLabel">Add Jokers</div><p class="smallHelp">Jokers can instantly end a hand and give points to everyone without one.</p></div><button class="toggle" data-toggle="addJokers" aria-label="Toggle Jokers"></button></div>
+          <div class="controlRow"><div><div class="controlLabel">Add Jokers</div><p class="smallHelp">Jokers skip trading for the hand and rank highest.</p></div><button class="toggle" data-toggle="addJokers" aria-label="Toggle Jokers"></button></div>
           <div class="controlRow"><label for="lowestEffect">Lowest-card effect</label><select id="lowestEffect"><option value="shockwave">Red shockwave</option><option value="danger-pulse">Red danger pulse</option><option value="shadow-slam">Red shadow slam</option><option value="shake">Card shake</option><option value="collapse-sink">Collapse / sink</option></select></div>
           <div class="lossPreviewStage" id="lossPreviewStage" aria-label="Lowest-card effect preview"></div><div class="lossPreviewControls"><button class="miniBtn" id="previewLossEffectBtn" type="button">Preview Effect</button></div>
         </div></div></div>
       </section>
-      <section class="subpage" id="rulesPage"><div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Rules</div></div><div class="sectionBox"><h3>Screw Your Neighbor</h3><p>Each active player is dealt one card. Aces are low and Kings are high. Try not to have the lowest card at the reveal.</p><ol><li>Play starts left of the dealer and moves toward the dealer.</li><li>On your turn, choose <b>Stay</b> or <b>Trade</b> with the next player.</li><li>If you try to trade with a King, that King flips up and blocks the trade.</li><li>If you try to trade with a Queen, that Queen flips up and forces you to trade with the previous player instead.</li><li>If that forced backward trade hits another King or Queen, that card flips up, the original card returns home, and no back-and-forth loop happens.</li><li>The dealer acts last and may trade with the deck. Deck trades are never blocked by Kings or Queens.</li><li>Optional Joker mode: 2 Jokers with 4–7 players, 1 Joker with 8+. If dealt or drawn, reveal it and end the hand; everyone without a Joker takes 1 point.</li><li>Everyone reveals. The lowest card gets 1 point. Ties for lowest all get a point.</li><li>At 3 points, a player is eliminated. If everyone left would be eliminated together, the round is replayed with the same players.</li><li>Last player standing wins.</li></ol></div></section>
+      <section class="subpage" id="rulesPage"><div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Rules</div></div><div class="sectionBox"><h3>Screw Your Neighbor</h3><p>Each active player is dealt one card. Aces are low and Kings are high. Try not to have the lowest card at the reveal.</p><ol><li>Play starts left of the dealer and moves toward the dealer.</li><li>On your turn, choose <b>Stay</b> or <b>Trade</b> with the next player.</li><li>If you try to trade with a King, that King flips up and blocks the trade.</li><li>If you try to trade with a Queen, that Queen flips up and forces you to trade with the previous player instead.</li><li>If that forced backward trade hits another King or Queen, that card flips up, the original card returns home, and no back-and-forth loop happens.</li><li>The dealer acts last and may trade with the deck. Deck trades are never blocked by Kings or Queens.</li><li>Optional Joker mode: 2 Jokers with 4–7 players, 1 Joker with 8+. If dealt or drawn, reveal it, skip trading, and score the hand normally. Jokers rank highest.</li><li>Everyone reveals. The lowest card gets 1 point. Ties for lowest all get a point.</li><li>At 3 points, a player is eliminated. If everyone left would be eliminated together, the round is replayed with the same players.</li><li>Last player standing wins.</li></ol></div></section>
     </div>
   </div>
 </aside>
@@ -184,7 +184,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
   <div class="splashCard"><div class="logo"><img class="splashIcon" src="icons/icon-512.png" alt="Screw Your Neighbor" draggable="false" /></div><h1 class="splashGameTitle"><span>Screw Your Neighbor</span></h1><div class="splashActions"><button class="primaryBtn" id="startBtn" type="button">Start New Game</button><button class="ghostBtn hidden" id="continueBtn" type="button">Continue Game</button><button class="ghostBtn" id="splashRulesBtn" type="button">Rules</button></div></div>
 </section>
 
-<div class="modalOverlay" id="setupModal"><div class="modalCard"><div class="modalHead"><strong>New Game</strong><button class="closeDrawer" data-close-modal="setupModal">×</button></div><div class="modalBody"><div class="setupGrid"><div class="setupRow"><label for="setupAiCount">AI players</label><select id="setupAiCount"><option value="3">3 AI</option><option value="4" selected>4 AI</option><option value="5">5 AI</option><option value="6">6 AI</option><option value="7">7 AI</option><option value="8">8 AI</option><option value="9">9 AI</option><option value="10">10 AI</option></select></div><div class="setupRow jokerSetupRow"><div class="jokerSetupText"><details class="setupHelp jokerHelp"><summary><span>Jokers</span><span class="helpIcon" aria-label="What do Jokers do?">?</span></summary><ul class="jokerBulletList"><li><b>Jokers added:</b> 2 with 4–7 players, 1 with 8+ players.</li><li><b>Joker rule:</b> If dealt or drawn, reveal it and end the hand. Everyone without a Joker takes 1 point.</li></ul></details></div><button class="toggle" id="setupJokersBtn" type="button" aria-label="Toggle Jokers"></button></div><p class="smallHelp">Total players will be you plus the selected AI players. Dealer rotates each round and acts last.</p></div></div><div class="modalFoot"><button class="ghostBtn" data-close-modal="setupModal" type="button">Cancel</button><button class="primaryBtn" id="confirmNewGame" type="button">Deal Cards</button></div></div></div>
+<div class="modalOverlay" id="setupModal"><div class="modalCard"><div class="modalHead"><strong>New Game</strong><button class="closeDrawer" data-close-modal="setupModal">×</button></div><div class="modalBody"><div class="setupGrid"><div class="setupRow"><label for="setupAiCount">AI players</label><select id="setupAiCount"><option value="3">3 AI</option><option value="4" selected>4 AI</option><option value="5">5 AI</option><option value="6">6 AI</option><option value="7">7 AI</option><option value="8">8 AI</option><option value="9">9 AI</option><option value="10">10 AI</option></select></div><div class="setupRow jokerSetupRow"><div class="jokerSetupText"><details class="setupHelp jokerHelp"><summary><span>Jokers</span><span class="helpIcon" aria-label="What do Jokers do?">?</span></summary><ul class="jokerBulletList"><li><b>Jokers added:</b> 2 with 4–7 players, 1 with 8+ players.</li><li><b>Joker rule:</b> If dealt or drawn, reveal it and skip trading. Joker is highest; lowest card still takes 1 point.</li></ul></details></div><button class="toggle" id="setupJokersBtn" type="button" aria-label="Toggle Jokers"></button></div><p class="smallHelp">Total players will be you plus the selected AI players. Dealer rotates each round and acts last.</p></div></div><div class="modalFoot"><button class="ghostBtn" data-close-modal="setupModal" type="button">Cancel</button><button class="primaryBtn" id="confirmNewGame" type="button">Deal Cards</button></div></div></div>
 <div class="modalOverlay" id="roundModal"><div class="modalCard"><div class="modalHead"><strong id="roundModalTitle">Round Complete</strong></div><div class="modalBody" id="roundModalBody"></div><div class="modalFoot" id="roundModalFoot"><button class="primaryBtn" id="nextRoundBtn" type="button">Next Round</button></div></div></div>
 <div class="modalOverlay" id="watchModal"><div class="modalCard"><div class="modalHead"><strong>You’re Out</strong></div><div class="modalBody"><p>You hit 3 points and have been eliminated. You can watch the AI players finish the game, or end this game and return to the home page.</p></div><div class="modalFoot"><button class="ghostBtn" id="exitAfterElimBtn" type="button">Exit to Home</button><button class="primaryBtn" id="watchAfterElimBtn" type="button">Watch the Computers</button></div></div></div>
 <div class="modalOverlay" id="gameOverModal"><div class="modalCard"><div class="modalHead"><strong>Game Over</strong></div><div class="modalBody" id="gameOverBody"></div><div class="modalFoot"><button class="primaryBtn" id="gameOverSplashBtn" type="button">Back to Home</button></div></div></div>
@@ -193,7 +193,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
 <script>
 (() => {
   'use strict';
-  const APP_VERSION = 'v44';
+  const APP_VERSION = 'v45';
   const SAVE_KEY = 'synSave.v1';
   const SETTINGS_KEY = 'synSettings.v1';
   let drawerTapClickUntil = 0;
@@ -241,7 +241,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
   function frame(){ return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); }
   function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
   function uid(){ return Math.random().toString(36).slice(2,9); }
-  function cardValue(card){ return card ? (card.rank === 'Joker' ? 0 : RANKS.indexOf(card.rank) + 1) : 0; }
+  function cardValue(card){ return card ? (card.rank === 'Joker' ? RANKS.length + 1 : RANKS.indexOf(card.rank) + 1) : 0; }
   function cardName(card){ return card ? (card.rank === 'Joker' ? 'Joker' : `${card.rank}${card.suit}`) : '—'; }
   function isSpecial(card){ return card && (card.rank === 'K' || card.rank === 'Q'); }
   function isRedSuit(suit){ return suit === '♥' || suit === '♦' || suit === '🃏'; }
@@ -452,7 +452,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     const deck = [];
     for(const suit of SUITS){ for(const rank of RANKS){ deck.push({id:uid(),rank,suit,value:RANKS.indexOf(rank)+1}); } }
     const jokerTotal = jokerCountForCurrentRound();
-    for(let i=0;i<jokerTotal;i++) deck.push({id:uid(),rank:'Joker',suit:'🃏',value:0,joker:true});
+    for(let i=0;i<jokerTotal;i++) deck.push({id:uid(),rank:'Joker',suit:'🃏',value:RANKS.length + 1,joker:true});
     for(let i=deck.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [deck[i],deck[j]] = [deck[j],deck[i]]; }
     return deck;
   }
@@ -530,7 +530,6 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
 
   async function handleJokerRound(jokerIds){
     if(!state || state.phase !== 'turn') return;
-    state.phase = 'scoring';
     state.busy = true;
     state.awaitingHuman = false;
     const jokerSet = new Set(jokerIds);
@@ -540,7 +539,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
         for(const observer of activePlayers()) observer.known[p.id] = {...p.card};
       }
     }
-    transient.action = jokerIds.length > 1 ? 'Jokers! Everyone else gets a point.' : `${nameOf(playerById(jokerIds[0]))} has a Joker.`;
+    transient.action = jokerIds.length > 1 ? 'Jokers! No trading this hand.' : `${nameOf(playerById(jokerIds[0]))} has a Joker. No trading this hand.`;
     transient.justRevealed = jokerIds.slice();
     transient.losers = [];
     transient.lossEffectDone = false;
@@ -550,38 +549,9 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     await delay(settings.animations ? 900 : 120);
     transient.justRevealed = [];
     render();
-    await delay(settings.animations ? 500 : 80);
-
-    const recipients = activePlayers().filter(p => !jokerSet.has(p.id));
-    if(recipients.length){
-      const scoreBumps = recipients.map(p => ({id:p.id, from:p.points, to:p.points + 1}));
-      transient.scoreBumps = scoreBumps;
-      transient.action = recipients.length === 1 ? `${nameOf(recipients[0])} gets 1 point.` : 'Every non-Joker player gets 1 point.';
-      render();
-      await animateScoreBumps(scoreBumps);
-      for(const item of scoreBumps){
-        const p = playerById(item.id);
-        if(p){ p.points = item.to; bumpStat(p.id, 'pointsTaken'); }
-      }
-      transient.scoreBumps = [];
-      render();
-      const eliminated = recipients.filter(p => p.points >= 3);
-      if(!Array.isArray(state.eliminationOrder)) state.eliminationOrder = [];
-      for(const p of eliminated){
-        if(!state.eliminationOrder.some(entry => (typeof entry === 'object' ? entry.id : entry) === p.id)){
-          state.eliminationOrder.push({id:p.id, round:state.round, at:Date.now(), order:state.eliminationOrder.length + 1});
-        }
-        p.eliminated = true;
-        p.revealed = true;
-        ensureStats(p).eliminatedRound = state.round;
-        addLog(p.human ? 'You are out' : `${p.name} is out`, `${nameOf(p)} reached 3 points from a Joker hand and ${p.human ? 'were' : 'was'} eliminated.`);
-      }
-    }
-
-    addLog('Joker hand', jokerIds.map(id => `${nameOf(playerById(id))} had a Joker`).join(', ') + '. Everyone else got 1 point.');
-    state.busy = false;
-    render(); saveGame();
-    showJokerSummary(jokerIds, recipients);
+    await delay(settings.animations ? 420 : 70);
+    addLog('Joker hand', jokerIds.map(id => `${nameOf(playerById(id))} had a Joker`).join(', ') + '. No trades; score the hand normally.');
+    await endRound();
   }
 
   function showJokerSummary(jokerIds, recipients){
@@ -590,7 +560,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     els.roundModalTitle.textContent = 'Joker Hand';
     const jokerNames = jokerIds.map(id => escapeHtml(nameOf(playerById(id)))).join(', ');
     const rows = state.players.map(p => `<div class="rankRow" style="opacity:${p.eliminated ? .48 : 1}"><div class="rankNum">${p.eliminated ? '×' : p.points}</div><div><div class="rankName">${escapeHtml(p.name)}${p.id === state.dealerId ? ' · Dealer' : ''}</div><div class="smallHelp">${p.card ? cardName(p.card) : 'Out'}${jokerIds.includes(p.id) ? ' · Joker' : ''}</div></div><div class="rankPts">${p.eliminated ? 'OUT' : `${p.points}/3`}</div></div>`).join('');
-    els.roundModalBody.innerHTML = `<p><b>${jokerNames}</b> ${jokerIds.length === 1 ? 'had a Joker' : 'had Jokers'}. Every other active player received 1 point and the hand ended immediately.</p>${rows}`;
+    els.roundModalBody.innerHTML = `<p><b>${jokerNames}</b> ${jokerIds.length === 1 ? 'had a Joker' : 'had Jokers'}. Trading was skipped and the hand scored normally.</p>${rows}`;
     if(active.length <= 1){ closeModal('roundModal'); finishGame(active[0]); return; }
     if(human?.eliminated && !state.humanWatching){ openModal('watchModal'); return; }
     state.phase = 'roundOver';
@@ -647,7 +617,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     const knownOther = Object.entries(p.known || {}).filter(([id]) => Number(id) !== p.id).map(([,card]) => cardValue(card)).filter(Boolean);
     const revealedOther = activePlayers().filter(o => o.id !== p.id && o.revealed).map(o => cardValue(o.card));
     const knownLow = Math.min(...knownOther, ...revealedOther, Infinity);
-    if(p.card.rank === 'K' || p.card.rank === 'Q') return 'keep';
+    if(p.card.rank === 'Joker' || p.card.rank === 'K' || p.card.rank === 'Q') return 'keep';
     // If the AI knows any active player has a lower card, this card is safe. Do not trade.
     if(knownLow < my) return 'keep';
     if(isDealer(p.id)){
@@ -702,8 +672,7 @@ body[data-cardback="classic"] .backCard, .cardBackThumb[data-style="classic"], .
     addLog(p.human ? 'You trade with deck' : `${p.name} trades with deck`, `${nameOf(p)} swapped ${p.human || state.humanWatching ? cardName(old) : 'a card'} with the deck.`);
     if(newCard.rank === 'Joker'){
       transient.action = `${nameOf(p)} drew a Joker from the deck.`;
-      render();
-      await delay(settings.animations ? 260 : 40);
+      await renderTradeResult(humanInvolved);
       await handleJokerRound([p.id]);
       return;
     }
