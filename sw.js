@@ -1,4 +1,4 @@
-const CACHE_NAME = 'syn-pwa-v45';
+const CACHE_NAME = 'syn-pwa-v48';
 const CORE_ASSETS = [
   './',
   './index.html',
